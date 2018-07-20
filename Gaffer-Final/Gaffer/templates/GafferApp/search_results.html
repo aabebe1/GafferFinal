@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+{% extends "GafferApp/maindrill.html" %}
+{% block drillBody %}
+  <div class="jumbotron">
+    <p> Key word searched for: {{ query_string}} </p>
+	{% if query_string and not found_entries %}
+	<p>No results found.</p>
+	{% else %}
+    <p> Here are the drills that match your search, click the link to go to the relevant page:</p>
+    {% for result in found_entries %}
+    <p>
+    <a href = '/GafferApp/drill_list/{{result.id}}'>{{result}}</a>
+    </p>
+
+    {% endfor %}
+	{% endif %}
+
+    {% if found_entries.has_other_pages %}
+  <ul class="pagination">
+        {% if found_entries.has_previous %}
+          <li><a href="?page={{ found_entries.previous_page_number }}">&laquo;</a></li>
+        {% else %}
+          <li class="disabled"><span>&laquo;</span></li>
+        {% endif %}
+        {% for i in found_entries.paginator.page_range %}
+          {% if found_entries.number == i %}
+            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+          {% else %}
+            <li><a href="?page={{ i }} ">{{ i }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if found_entries.has_next %}
+          <li><a href="?page={{ found_entries.next_page_number }}">&raquo;</a></li>
+        {% else %}
+          <li class="disabled"><span>&raquo;</span></li>
+        {% endif %}
+  </ul>
+{% endif %}
+</div>
+{% endblock %}

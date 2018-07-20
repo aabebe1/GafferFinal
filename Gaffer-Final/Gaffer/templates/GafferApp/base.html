@@ -1,0 +1,131 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Use Internet Explorer to View this for now</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cagliostro" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cagliostro" />
+  <link rel="stylesheet" type="text/css" href="{% static "css/base.css" %}"/>
+  <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+  	<!-- DOCUMENTATION NAVBAR -->
+
+  	<nav class="navbar navbar navbar-expand navbar-dark navbar-inverse navbar-fixed-top ">
+
+      <!-- Inside of a Container -->
+    <div class="container-fluid">
+
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <!-- This is the actual code that create the "hamburger icon" -->
+      <!-- The data-target grabs ids to put into the icon -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+
+          <!--  Code for the hamburger icon-->
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+
+      <a class="navbar-brand" href="#">Gaffer</a>
+      </div>
+
+      <!-- Anything inside of collapse navbar-collapse goes into the "hamburger" -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <!--  <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
+          <li><a href="#">Link</a></li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#">Action</a></li>
+              <li><a href="http://www.google.com">Link</a></li>
+              <li><a href="#">GafferApp</a></li>
+
+
+
+              <li role="separator" class="divider"></li>
+              <li><a href="#">Separated Links</a></li>
+            </ul>
+          </li> -->
+        </ul>
+
+        <!-- Stuff on the Right -->
+        <!-- SEARCH BAR -->
+        <form class="navbar-form navbar-right" role="search">
+          <div class="form-group">
+            <input type="text" class="form-control" placeholder="Search">
+          </div>
+          <button type="submit" class="btn btn-default">Submit </button>
+        </form>
+
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+    </nav>
+
+
+  <!-- OTHER STUFF ON THE PAGE -->
+
+
+      <div class="nav-side-menu nav bd-sidenav ">
+
+          <i data-toggle="collapse" data-target="#menu-content"> </i>
+
+          <div class="menu-list list-group">
+
+            <ul id="menu-content" class="menu-content collapse out">
+
+                <li  data-toggle="collapse" data-target="#products" class="collapsed active"> <a href="#"> <strong> Coaching Plans </strong> </a></li>
+                <ul class="sub-menu collapse" id="products">
+                    <li class = "active"> <a href="#"> <strong>Create Coaching Plans </strong> </a></li>
+                    <li class = "active"> <a href="#"> <strong>View Coaching Plans</strong> </a></li>
+                </ul>
+                <li data-toggle="collapse" data-target="#service" class="collapsed"> <a href="#"> <strong>Drills</strong> </a></li>
+
+                <ul class="sub-menu collapse" id="service">
+                    <li class = "active"> <a href="{% url 'GafferApp:drillform' %}"> <strong>Create Drills</strong> </a></li>
+                    <li class = "active"> <a href="{% url 'GafferApp:maindrill' %}"><strong>View Drills </strong></a></li>
+                    <li class = "active"> <a href="#"><strong>Update Drills</strong></a></li>
+                </ul>
+
+                <li data-toggle="collapse" data-target="#new" class="collapsed"><a href="#"><strong>Coaching Tools</strong> </a></li>
+                <li class = "active"> <a href="{% url 'GafferApp:lineup' %}"> <strong>Create Lineup</strong> </a></li>
+                <li class = "active"> <a href="{% url 'GafferApp:maindrill' %}"><strong>View Lineup </strong></a></li>
+                <li><a href="#"><strong> Profile </strong></a></li>
+
+                 <li> <a href="#"><strong> Forum </strong> </a></li>
+              </ul>
+            </div>
+            <div class="container-fluid">
+            <a><img  src="{% static "images/GSAlogo.png" %}" alt=" failed to load image"/></a>
+            </div>
+     </div>
+
+
+  <div id = "mainpage" class="container-fluid">
+      <div class="row">
+          <div class="col-lg-12">
+              {% block mainBody %}
+              {% endblock %}
+          </div>
+      </div>
+  </div>
+
+
+  <!-- Need to have JQuery and Javascript for DropDown Actions to work -->
+
+  <script
+  src="http://code.jquery.com/jquery-3.1.1.js"
+  integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA="
+  crossorigin="anonymous"></script>  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+{% extends "GafferApp/index.html" %}
+{% load staticfiles %}
+{% block mainBody %}
+	<link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+
+  <div class="jumbotron myJumbotron mt-3" style="max-width:1200px;">
+  	<h2 class="title">Gaffer Coach Profile Page</h2>
+	<center>
+    <div class="row">
+		<div class = "col details text-left">
+			<ul class="list-group" style="background-color:#33aa7e;">
+				<li class="list-group-item">user: {{bio_details.user}}</li>
+				<li class="list-group-item">Name: {{bio_details.name}}</li>
+				<li class="list-group-item">Team: {{bio_details.team}}</li>
+				<li class="list-group-item">Website: {{bio_details.website}}</li>
+				<li class="list-group-item">Twitter Handle: {{bio_details.twitterHandle}}</li>
+				<li class="list-group-item">About Me: {{bio_details.bio}}</li>
+			</ul>
+		</div>
+		<div class="col">
+			<img class="rounded-circle" src="{{ bio_details.profilePic.url }}" style="max-width:250px;"></img>
+		</div>
+	</div>
+	</center>
+<div>
+  {% if user.is_authenticated and user.id == bio_details.user.id %}
+      <a class="btn btn-secondary btn-lg commentbut" href="{% url 'GafferApp:bio_edit' pk=bio_details.pk %}">Update Profile<span class="glyphicon glyphicon-pencil"></span></a>
+  {% endif %}
+</div>
+
+{% endblock %}

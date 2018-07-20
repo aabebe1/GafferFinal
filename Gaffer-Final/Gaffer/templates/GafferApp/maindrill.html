@@ -1,0 +1,33 @@
+{% extends "GafferApp/index.html" %}
+{% load staticfiles %}
+<!DOCTYPE html>
+{% block mainBody%}
+<link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+<!-- <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cagliostro" /> -->
+<!-- <div class="jumbotron drillIntro"> -->
+  <!-- <h1 class="display-3">Drills Page!</h1> -->
+  <!-- <p class="lead"> Select drills by type from below ...</p> -->
+  <!-- <hr class="my-4  lead"> -->
+<div id="drillTypeButtons" class="btn-group" role="group">
+
+  <th class = "maindrill container-fluid" >
+  <form class = "form-group" action="{% url 'GafferApp:drill_list' %}" method="GET">
+    <input type="submit" class='btn btn-secondary btn-lg linkbut' name='attack' value="Attacking Drills">
+    <input type="submit" class='btn btn-secondary btn-lg linkbut' name='defense' value="Defensive Drills">
+    <input type="submit" class='btn btn-secondary btn-lg linkbut' name='pass' value="Passing Drills">
+    <input type="submit" class='btn btn-secondary btn-lg linkbut' name='dribble' value="Dribbling Drills">
+    <input type="submit" class='btn btn-secondary btn-lg linkbut' name='shoot' value="Shooting Drills">
+    <input type="submit" class='btn btn-secondary btn-lg linkbut' name='cross' value="Crossing Drills">
+    <input type="submit" class='btn btn-secondary btn-lg linkbut' name='goalie' value="Goalie Drills">
+    <input type="submit" class='btn btn-secondary btn-lg linkbut' name='other' value=" Others  ">
+  </form>
+</th>
+</div>
+
+
+{% block drillBody %}
+{% endblock %}
+
+{% endblock %}
+
+</div>

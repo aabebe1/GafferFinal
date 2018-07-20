@@ -1,0 +1,36 @@
+{% extends "GafferApp/index.html" %}
+{% load staticfiles %}
+<!DOCTYPE html>
+
+{% block style %}
+
+#lineupBox {
+	float: left;
+	width: 601px;
+	height: 400px;
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	background-origin: content-box;
+	border:3px solid;
+	position: relative;
+}
+
+.player {
+	width: 30px;
+}
+
+{% endblock %}
+
+{% block mainBody %}
+	
+	<div id="lineupBox" class="mt-3 container" style="background-image:url({% static "images/lineupField.jpg" %});">
+	<img id="p1" class="player" src="{% static "images/player.png" %}">
+
+	
+	</div>
+	
+{% endblock %}
+
+{% block script %}
+	
+{% endblock %}

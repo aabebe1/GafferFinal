@@ -1,0 +1,26 @@
+{% extends "GafferApp/base.html" %}
+{% load staticfiles %}
+<!DOCTYPE html>
+{% block mainBody%}
+<link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+    <h1>My Drills</h1>
+
+    <div class="container drill_list">
+        {% for drill in object_list %}
+            <div class="">
+                <h3>{{ drill.drillTitle }}</h3>
+                <h3>{{ drill.drillType }}</h3>
+
+
+                <li><img src="{{ drill.drillImage.url }}" width = 240px ></img></li>
+
+            </div>
+        {% empty %}
+            <p>
+                No drills to view.
+
+            </p>
+        {% endfor %}
+    </div>
+
+{% endblock %}

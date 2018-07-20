@@ -1,0 +1,36 @@
+{% extends "GafferApp/index.html" %}
+{% load staticfiles %}
+{% load widget_tweaks %}
+{% load bootstrap3 %}
+<!DOCTYPE html>
+    {% block mainBody%}
+      <link rel="stylesheet" type="text/css" href="{% static "css/login.css" %}"/>
+      <link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+
+    <div class="jumbotron myJumbotron mt-3" style="max-width:1200px;">
+    <form  class = 'form-group' method="post" enctype="multipart/form-data" novalidate>
+
+    {% csrf_token %}
+    {% for hidden_field in form.hidden_fields %}
+      {{ hidden_field }}
+    {% endfor %}
+    {% for field in form.visible_fields %}
+      <div class="form-group">
+        {{ field.label_tag }}
+        {% render_field field class="form-control" %}
+        {% if field.help_text %}
+          <small class="form-text text-muted">{{ field.help_text }}</small>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+
+    <button type="submit" id="submitButton" class="btn btn-outline-light commentbut">Submit</button>
+
+  </form>
+</div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

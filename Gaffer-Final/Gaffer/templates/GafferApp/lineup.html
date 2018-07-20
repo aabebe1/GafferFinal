@@ -1,0 +1,3049 @@
+{% extends "GafferApp/index.html" %}
+{% load staticfiles %}
+<!DOCTYPE html>
+{% block mainBody%}
+
+<!-- <html dir="ltr" prefix="sport: http://purl.org/ontology/sport/ dc: http://purl.org/dc/terms/ schema: http://schema.org/ xsd: http://www.w3.org/2001/XMLSchema# og: http://ogp.me/ns# fb: http://developers.facebook.com/schema/ foaf: http://xmlns.com/foaf/0.1/" version="HTML+RDFa 1.1" lang="en-GB"> -->
+<head>
+<title>Soccer Lineups</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+
+	<meta name="description" content="Create and share your football formations and tactics" />
+	<meta property="og:title" content="Share My Tactics" />
+	<meta property="og:url" content="http://sharemytactics.com/" />
+	<meta property="og:description" content="Create and share your football formations and tactics" />
+	<meta property="og:type" content="website" />
+	<meta property="og:image" content="http://sharemytactics.com/images/twitter_photo.png" />
+	<meta property="og:image:type" content="image/png" />
+	<meta property="og:image:width" content="300" />
+	<meta property="og:image:height" content="300" />
+	<!-- <meta name="twitter:creator" content="@jonathan_ingram" />
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:image" content="http://sharemytactics.com/images/twitter_photo.png" />
+	<meta name="twitter:image:src" content="http://sharemytactics.com/images/twitter_photo.png" />
+	<meta name="twitter:image:width" content="300" />
+	<meta name="twitter:image:height" content="300" />
+<meta name="twitter:site" content="@ShareMyTactics" />
+<meta name="twitter:domain" content="sharemytactics.com"> -->
+<meta property="og:locale" content="en_GB" />
+<meta property="og:site_name" content="ShareMyTactics.com" />
+<meta property="fb:admins" content="100000200111721" />
+<meta name="msvalidate.01" content="7107CE35F837D52EF9A18D7CA5F063DA" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+
+<link rel="stylesheet" href="{% static "css/lineup.css" %}" media="screen,projection" />
+
+
+<meta name="application-name" content="ShareMyTactics.com" />
+<meta name="msapplication-TileColor" content="#57733b" />
+<meta name="msapplication-TileImage" content="/images/favicon_win8.png" />
+<link rel="canonical" href="http://sharemytactics.com" /><link rel="icon" href="/images/favicon_winter.png" sizes="16x16" type="image/png" /><script>
+
+
+
+	var player_num = 0;
+	var point_it_done = 0;
+	var off_centre = 16;
+
+	function point_it(event, x, y){
+		var ie_bug = 0;
+		if(we_are_moving == 0) { //when the user is moving a player it stops their finger inadvertently creating a new player at the same time
+			if(point_it_done == 0) { //only allow a new player to be created when there isn't enough players on the pitch
+				player_num++;
+				if(player_num <= 21) {
+					document.getElementById('keyboardmessage').style.display = 'none'; //hide the keyboard message
+					document.getElementById('keyboardmessage').setAttribute('onclick', '');
+					if(!(x && y)) {
+						var pos_x = event.offsetX?(event.offsetX):event.pageX-document.getElementById('pitch').offsetLeft;
+						var pos_y = event.offsetY?(event.offsetY):event.pageY-document.getElementById('pitch').offsetTop;
+						if(pos_x <= 32 && pos_y <= 32) { //this only occurs due to an IE bug (when trying to alter arrow directions) the dimensions get taken from the player div rather than the pitch div
+							ie_bug = 1;
+							player_num--; //due to the bug this needs reverting back
+						}
+						pos_x = pos_x - off_centre;
+						pos_y = pos_y - off_centre; //make the player marker sweet spot in the centre (rather than the top left)
+					}
+					else {
+						pos_x = x;
+						pos_y = y;
+					}
+
+					if(ie_bug == 0) {
+						if(pos_x < edgeXmin) { //use these to force players to stay in-bounds
+							pos_x = edgeXmin;
+						}
+						else if(pos_x > edgeXmax) {
+							pos_x = edgeXmax;
+						}
+						if(pos_y < edgeYmin) {
+							pos_y = edgeYmin;
+						}
+						else if(pos_y > edgeYmax) {
+							pos_y = edgeYmax;
+						}
+
+						document.getElementById('player' + player_num).style.left = pos_x + 'px';
+						document.getElementById('player' + player_num).style.top = pos_y + 'px';
+						document.getElementById('player' + player_num).style.display = 'block';
+						document.getElementById('player' + player_num).style.zIndex = '2';
+
+						can_they_submit = 1;
+					}
+				}
+				if(ie_bug == 0) {
+					document.getElementById('menu_clear').style.display = 'block';
+										if(player_num == 10 || player_num == 21) {
+						document.getElementById('pitch').style.cursor = 'default';
+						document.getElementById('menu_submit').style.display = 'block';
+						point_it_done = 1; //stop this function from running after the tenth outfield player is added
+						if(player_num == 10) {
+							document.getElementById('enable_opposition').style.display = 'inline-block';
+						}
+					}
+					playerCoordinates();
+					if(player_num <= 10) {
+						formation('home');
+						whatPosition();
+						reorder('home');
+					}
+					else if(player_num >= 12 && player_num <= 21) {
+						formation('away');
+						whatPosition();
+						reorder('away');
+					}
+				}
+			}
+		}
+		else if(we_are_moving == 1) {
+			we_are_moving = 0;
+		}
+	}
+
+</script>
+<script>
+
+	var entityMap = {
+		"&": "&amp;",
+		"<": "&lt;",
+		">": "&gt;",
+		'"': '&quot;',
+		"'": '&#39;',
+		"/": '&#x2F;'
+	};
+
+	function escapeHtml(string) {
+		return String(string).replace(/[&<>"'\/]/g, function (s) {
+			return entityMap[s];
+		});
+	}
+
+	var html5_storage = 0;
+
+	function supports_html5_storage() {
+					try {
+				return 'localStorage' in window && window['localStorage'] !== null;
+			}
+			catch (e) {
+				return false;
+			}
+				}
+
+	function rgbToHex(r, g, b) {
+		return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+	}
+
+	function hexToRgb(hex) {
+		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		return result ? {
+		r: parseInt(result[1], 16),
+		g: parseInt(result[2], 16),
+		b: parseInt(result[3], 16)
+		} : null;
+	}
+
+	function changeBGcolor(x) {
+		x = x.toLowerCase();
+		var champions_league = x.search("champions league");
+		var europa_league = x.search("europa league");
+		if(champions_league >= 0) {
+			var newColor = '#0f3362';
+		}
+		else if(europa_league >= 0) {
+			var newColor = '#63241c';
+		}
+		else {
+			var newColor = '#212121';
+		}
+
+		return newColor;
+	}
+
+	function changePitchcolor(x) {
+		x = x.toLowerCase();
+		var champions_league = x.search("champions league");
+		var europa_league = x.search("europa league");
+		if(champions_league >= 0) {
+			document.getElementById('pitch').style.backgroundImage="url('/images/pitch_champions_league.svg')";
+			if(!supportsSVG()) {
+				document.getElementById('pitch').style.backgroundImage="url('/images/pitch_champions_league.png')";
+			}
+		}
+		else if(europa_league >= 0) {
+			document.getElementById('pitch').style.backgroundImage="url('/images/pitch_europa_league.svg')";
+			if(!supportsSVG()) {
+				document.getElementById('pitch').style.backgroundImage="url('/images/pitch_europa_league.png')";
+			}
+		}
+		else {
+			document.getElementById('pitch').style.backgroundImage="url('/images/pitch.svg')";
+			if(!supportsSVG()) {
+				document.getElementById('pitch').style.backgroundImage="url('/images/pitch.png')";
+			}
+		}
+	}
+
+	var players = {};
+
+
+	function populatePlayerArray() {
+		players = {
+			'player0': {
+				id: 'player0',
+				name: 'Goalie',
+				position: 'GK',
+				position_num: 0,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player1': {
+				id: 'player1',
+				name: '',
+				position: '',
+				position_num: 100,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player2': {
+				id: 'player2',
+				name: '',
+				position: '',
+				position_num: 101,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player3': {
+				id: 'player3',
+				name: '',
+				position: '',
+				position_num: 102,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player4': {
+				id: 'player4',
+				name: '',
+				position: '',
+				position_num: 103,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player5': {
+				id: 'player5',
+				name: '',
+				position: '',
+				position_num: 104,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player6': {
+				id: 'player6',
+				name: '',
+				position: '',
+				position_num: 105,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player7': {
+				id: 'player7',
+				name: '',
+				position: '',
+				position_num: 106,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player8': {
+				id: 'player8',
+				name: '',
+				position: '',
+				position_num: 107,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player9': {
+				id: 'player9',
+				name: '',
+				position: '',
+				position_num: 108,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player10': {
+				id: 'player10',
+				name: '',
+				position: '',
+				position_num: 109,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player11': {
+				id: 'player11',
+				name: 'Goalie',
+				position: 'GK',
+				position_num: 0,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player12': {
+				id: 'player12',
+				name: '',
+				position: '',
+				position_num: 100,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player13': {
+				id: 'player13',
+				name: '',
+				position: '',
+				position_num: 101,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player14': {
+				id: 'player14',
+				name: '',
+				position: '',
+				position_num: 102,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player15': {
+				id: 'player15',
+				name: '',
+				position: '',
+				position_num: 103,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player16': {
+				id: 'player16',
+				name: '',
+				position: '',
+				position_num: 104,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player17': {
+				id: 'player17',
+				name: '',
+				position: '',
+				position_num: 105,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player18': {
+				id: 'player18',
+				name: '',
+				position: '',
+				position_num: 106,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player19': {
+				id: 'player19',
+				name: '',
+				position: '',
+				position_num: 107,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player20': {
+				id: 'player20',
+				name: '',
+				position: '',
+				position_num: 108,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			},
+			'player21': {
+				id: 'player21',
+				name: '',
+				position: '',
+				position_num: 109,
+				top: 0,
+				left: 0,
+				arrow: 0,
+				arrow2: 0
+			}
+		};
+	}
+
+	populatePlayerArray();
+
+	var elementPlayer = {}; // is populated via the 'window.onload' function
+
+	function playerCoordinates() {
+		for(var i = 1; i <= 21; i++) {
+			if(i != 11) {
+				var temp_top = elementPlayer['player'+i].style.top;
+				temp_top = temp_top.replace(/\D/g,''); //strip out 'px'
+				temp_top = parseInt(temp_top);
+				var temp_left = elementPlayer['player'+i].style.left;
+				temp_left = temp_left.replace(/\D/g,''); //strip out 'px'
+				temp_left = parseInt(temp_left);
+				if(temp_top > 0 && temp_left > 0) {
+					players['player'+i]['top'] = Math.round(temp_top * newPitchHeightRatio);
+					players['player'+i]['left'] = Math.round(temp_left * newPitchWidthRatio);
+					if(html5_storage == 1) {
+						localStorage['player' + i + '_left'] = Math.round(temp_left * newPitchWidthRatio);
+						localStorage['player' + i + '_top'] = Math.round(temp_top * newPitchHeightRatio);
+					}
+				}
+			}
+		}
+	}
+
+	function whatPosition() {
+		for(var i = 1; i <= 21; i++) {
+			if(i != 11) {
+				if(i >= 1 && i <= 10) {
+					var team = 'home';
+				}
+				else if(i >= 12 && i <= 21) {
+					var team = 'away';
+				}
+				var top_coordinate = players['player'+i]['top'];
+				var left_coordinate = players['player'+i]['left'];
+
+				if(top_coordinate >= position_coordinates[team]['LB']['topMin'] && top_coordinate <= position_coordinates[team]['LB']['topMax'] && left_coordinate >= position_coordinates[team]['LB']['leftMin'] && left_coordinate <= position_coordinates[team]['LB']['leftMax']) {
+					//left back
+					players['player'+i]['position'] = 'LB';
+					players['player'+i]['position_num'] = 3;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['DC']['topMin'] && top_coordinate <= position_coordinates[team]['DC']['topMax'] && left_coordinate > position_coordinates[team]['DC']['leftMin'] && left_coordinate < position_coordinates[team]['DC']['leftMax']) {
+					//center back
+					players['player'+i]['position'] = 'DC';
+					players['player'+i]['position_num'] = 2;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['RB']['topMin'] && top_coordinate <= position_coordinates[team]['RB']['topMax'] && left_coordinate >= position_coordinates[team]['RB']['leftMin'] && left_coordinate <= position_coordinates[team]['RB']['leftMax']) {
+					//right back
+					players['player'+i]['position'] = 'RB';
+					players['player'+i]['position_num'] = 1;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['LWB']['topMin'] && top_coordinate < position_coordinates[team]['LWB']['topMax'] && left_coordinate >= position_coordinates[team]['LWB']['leftMin'] && left_coordinate <= position_coordinates[team]['LWB']['leftMax']) {
+					//left wing back
+					players['player'+i]['position'] = 'LWB';
+					players['player'+i]['position_num'] = 7;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['DMC']['topMin'] && top_coordinate < position_coordinates[team]['DMC']['topMax'] && left_coordinate > position_coordinates[team]['DMC']['leftMin'] && left_coordinate < position_coordinates[team]['DMC']['leftMax']) {
+					//defensive midfielder
+					players['player'+i]['position'] = 'DMC';
+					players['player'+i]['position_num'] = 5;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['MC']['topMin'] && top_coordinate < position_coordinates[team]['MC']['topMax'] && left_coordinate > position_coordinates[team]['MC']['leftMin'] && left_coordinate < position_coordinates[team]['MC']['leftMax']) {
+					//defensive midfielder
+					players['player'+i]['position'] = 'MC';
+					players['player'+i]['position_num'] = 6;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['RWB']['topMin'] && top_coordinate < position_coordinates[team]['RWB']['topMax'] && left_coordinate >= position_coordinates[team]['RWB']['leftMin'] && left_coordinate <= position_coordinates[team]['RWB']['leftMax']) {
+					//right wing back
+					players['player'+i]['position'] = 'RWB';
+					players['player'+i]['position_num'] = 4;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['LW']['topMin'] && top_coordinate < position_coordinates[team]['LW']['topMax'] && left_coordinate >= position_coordinates[team]['LW']['leftMin'] && left_coordinate <= position_coordinates[team]['LW']['leftMax']) {
+					//left winger
+					players['player'+i]['position'] = 'LW';
+					players['player'+i]['position_num'] = 10;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['AMC']['topMin'] && top_coordinate < position_coordinates[team]['AMC']['topMax'] && left_coordinate > position_coordinates[team]['AMC']['leftMin'] && left_coordinate < position_coordinates[team]['AMC']['leftMax']) {
+					//central midfielder
+					players['player'+i]['position'] = 'AMC';
+					players['player'+i]['position_num'] = 9;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['RW']['topMin'] && top_coordinate < position_coordinates[team]['RW']['topMax'] && left_coordinate >= position_coordinates[team]['RW']['leftMin'] && left_coordinate <= position_coordinates[team]['RW']['leftMax']) {
+					//right winger
+					players['player'+i]['position'] = 'RW';
+					players['player'+i]['position_num'] = 8;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['LWF']['topMin'] && top_coordinate < position_coordinates[team]['LWF']['topMax'] && left_coordinate >= position_coordinates[team]['LWF']['leftMin'] && left_coordinate <= position_coordinates[team]['LWF']['leftMax']) {
+					//left wing forward
+					players['player'+i]['position'] = 'LWF';
+					players['player'+i]['position_num'] = 14;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['SS']['topMin'] && top_coordinate < position_coordinates[team]['SS']['topMax'] && left_coordinate > position_coordinates[team]['SS']['leftMin'] && left_coordinate < position_coordinates[team]['SS']['leftMax']) {
+					//attacker
+					players['player'+i]['position'] = 'SS';
+					players['player'+i]['position_num'] = 12;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['FC']['topMin'] && top_coordinate < position_coordinates[team]['FC']['topMax'] && left_coordinate > position_coordinates[team]['FC']['leftMin'] && left_coordinate < position_coordinates[team]['FC']['leftMax']) {
+					//attacker
+					players['player'+i]['position'] = 'FC';
+					players['player'+i]['position_num'] = 13;
+				}
+
+				else if(top_coordinate >= position_coordinates[team]['RWF']['topMin'] && top_coordinate < position_coordinates[team]['RWF']['topMax'] && left_coordinate >= position_coordinates[team]['RWF']['leftMin'] && left_coordinate <= position_coordinates[team]['RWF']['leftMax']) {
+					//right wing forward
+					players['player'+i]['position'] = 'RWF';
+					players['player'+i]['position_num'] = 11;
+				}
+			}
+		}
+	}
+
+	function reorder(team) {
+		if(team == 'home') {
+			var begin = 0;
+			var end = 10;
+		}
+		else if(team == 'away') {
+			var begin = 11;
+			var end = 21;
+		}
+		var players_ordered = [];
+		for(var i = begin; i <= end; i++) {
+			var temp_list = {};
+			temp_list['id'] = players['player'+i]['id'];
+			temp_list['name'] = players['player'+i]['name'];
+			temp_list['position'] = players['player'+i]['position'];
+			temp_list['position_num'] = players['player'+i]['position_num'];
+			temp_list['top'] = players['player'+i]['top'];
+			temp_list['left'] = players['player'+i]['left'];
+			players_ordered.push(temp_list);
+		}
+		players_ordered.sort(function(a,b) { return parseFloat(a.position_num) - parseFloat(b.position_num) } );
+
+		var lineup_tbody = document.getElementById('lineup_tbody_' + team);
+		for(var i = 0; i <= 10; i++) {
+			lineup_tbody.deleteRow(-1); //removes the very last row of the table (eleven times)
+		}
+
+		var row_order = 'odd';
+		var tbody = '';
+		var ol = '';
+		var tr_odd = '';
+		for(var i = 0; i <= 10; i++) {
+			var editTD = '';
+			var playerNum = players_ordered[i]['id'].replace(/player/,''); //this makes sure we're using the correct id, rather than the 'for' loops 'i'
+
+			var newRow = lineup_tbody.insertRow(-1); //adds a row to the end of the table
+
+			if(i%2 == 0) { //if 'i' from for loop is even number
+				newRow.className = 'odd';
+			}
+
+			if(players_ordered[i]['name'] == '') {
+				players_ordered[i]['name'] = '\u00A0'; //use instead of '&nbsp;'
+			}
+
+			var newCellPlayer = newRow.insertCell(0);
+			var newText = document.createTextNode(players_ordered[i]['name']);
+			newCellPlayer.appendChild(newText);
+			newCellPlayer.setAttribute('id', 'td_player' + playerNum);
+
+			if(players_ordered[i]['position'] != '') {
+				newCellPlayer.className = 'lineup_edit';
+				newCellPlayer.setAttribute('tabindex', '0');
+				newCellPlayer.setAttribute('onclick', 'editPlayerName(\'' + playerNum + '\');');
+				newCellPlayer.setAttribute('onfocus', 'editPlayerName(\'' + playerNum + '\');');
+				newCellPlayer.setAttribute('onmouseover', 'shadow(\'' + playerNum + '\', \'1\');');
+				newCellPlayer.setAttribute('onmouseout', 'shadow(\'' + playerNum + '\', \'0\');');
+			}
+
+			var newCellPosition = newRow.insertCell(1);
+			var newText = document.createTextNode(players_ordered[i]['position']);
+			newCellPosition.appendChild(newText);
+			newCellPosition.setAttribute('id', 'td_position' + playerNum);
+		}
+	}
+
+	function editPlayerName(x) {
+		shadow(x, '1');
+		listenKeysTextbox = x;
+		var playerName = players['player'+x]['name'];
+		var td_player = document.getElementById('td_player'+x);
+		td_player.setAttribute('onclick', '');
+		td_player.setAttribute('onfocus', '');
+		td_player.setAttribute('onmouseover', '');
+		td_player.setAttribute('onmouseout', '');
+		var tempNodes = td_player.childNodes;
+		for(var i = 0; i < tempNodes.length; i++) {
+			td_player.removeChild(tempNodes[i]);
+		}
+		var textbox = document.createElement('input');
+		textbox.setAttribute('onblur', 'onBlurPlayerName(\'' + x + '\');');
+		textbox.setAttribute('type', 'text');
+		textbox.setAttribute('list', 'players');
+		textbox.setAttribute('id', 'textbox_player' + x);
+		textbox.setAttribute('name', 'textbox_player' + x);
+		textbox.setAttribute('spellcheck', 'false');
+		textbox.setAttribute('value', playerName);
+		textbox.setAttribute('labelledby', 'td_position' + x);
+		textbox.setAttribute('onkeyup', 'onKeyupPlayerName(\'' + x + '\');');
+		td_player.appendChild(textbox);
+		var textbox_player = document.getElementById('textbox_player' + x);
+		textbox_player.focus();
+		textbox_player.value = playerName + ' '; //these 2 lines put cursor focus at the end (firefox needs this particular line as the value needs to be altered to force this feature through, hence we amend it before reverting back)
+		textbox_player.value = playerName;
+
+		addEventSimple(document,'keydown',listenKeys);
+		addEventSimple(document,'keypress',listenKeyEvents);
+	}
+
+	function onKeyupPlayerName(x) {
+		document.getElementById('player'+x).setAttribute('data-playername', document.getElementById('textbox_player'+x).value);
+	}
+
+	function onBlurPlayerName(x) {
+		shadow(x, '0');
+		var playerName = document.getElementById('textbox_player'+x).value;
+		var td_player = document.getElementById('td_player'+x);
+
+		if(players['player'+x]['name'] != playerName) {
+			can_they_submit = 1;
+		}
+
+		players['player'+x]['name'] = playerName;
+		var tempNodes = td_player.childNodes;
+		for(var i = 0; i < tempNodes.length; i++) {
+			td_player.removeChild(tempNodes[i]);
+		}
+		td_player.appendChild(document.createTextNode(playerName));
+		td_player.setAttribute('onclick', 'editPlayerName(\'' + x + '\');');
+		td_player.setAttribute('onfocus', 'editPlayerName(\'' + x + '\');');
+		td_player.setAttribute('onmouseover', 'shadow(\'' + x + '\', \'1\');');
+		td_player.setAttribute('onmouseout', 'shadow(\'' + x + '\', \'0\');');
+		document.getElementById('player'+x).setAttribute('data-playername', playerName);
+
+		if(html5_storage == 1) {
+			localStorage['player' + x + '_name'] = playerName;
+		}
+
+		removeEventSimple(document,'keypress',listenKeys);
+		removeEventSimple(document,'keypress',listenKeyEvents);
+		removeEventSimple(document,'keydown',listenKeys);
+	}
+
+	function escapePlayerName(x) {
+		shadow(x, '0');
+		var td_player = document.getElementById('td_player'+x);
+		var tempNodes = td_player.childNodes;
+		for(var i = 0; i < tempNodes.length; i++) {
+			td_player.removeChild(tempNodes[i]);
+		}
+		td_player.appendChild(document.createTextNode(players['player'+x]['name']));
+		document.getElementById('player'+x).setAttribute('data-playername', players['player'+x]['name']);
+		td_player.setAttribute('onclick', 'editPlayerName(\'' + x + '\');');
+		td_player.setAttribute('onfocus', 'editPlayerName(\'' + x + '\');');
+		td_player.setAttribute('onmouseover', 'shadow(\'' + x + '\', \'1\');');
+		td_player.setAttribute('onmouseout', 'shadow(\'' + x + '\', \'0\');');
+
+		removeEventSimple(document,'keypress',listenKeys);
+		removeEventSimple(document,'keypress',listenKeyEvents);
+		removeEventSimple(document,'keydown',listenKeys);
+	}
+
+	var listenKeysTextbox = '';
+
+	function listenKeys(e) {
+		var evt = e || window.event;
+		var key = evt.keyCode;
+		switch (key) {
+			case 13: 	// enter
+				onBlurPlayerName(listenKeysTextbox);
+				break;
+			case 27: 	// escape
+				escapePlayerName(listenKeysTextbox);
+				break;
+		}
+	}
+
+	function listenKeyEvents() {
+		// for Opera and Safari 1.3
+		removeEventSimple(document,'keydown',listenKeys);
+		removeEventSimple(document,'keypress',listenKeyEvents);
+		addEventSimple(document,'keypress',listenKeys);
+	}
+
+	function addEventSimple(obj,evt,fn) {
+		if (obj.addEventListener)
+			obj.addEventListener(evt,fn,false);
+		else if (obj.attachEvent)
+			obj.attachEvent('on'+evt,fn);
+	}
+
+	function removeEventSimple(obj,evt,fn) {
+		if (obj.removeEventListener)
+			obj.removeEventListener(evt,fn,false);
+		else if (obj.detachEvent)
+			obj.detachEvent('on'+evt,fn);
+	}
+
+	function displayPlayerArrows(x) {
+		if(html5_storage == 1) {
+			localStorage[x + '_arrow'] = players[x]['arrow']; //always needs to stay one click behind, so 'onload' works properly
+		}
+		if(players[x]['arrow'] == 0) {
+			players[x]['arrow'] = 1;
+			document.getElementById(x+'_arrow').className = 'arrow arrow1';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 1) {
+			players[x]['arrow'] = 2;
+			document.getElementById(x+'_arrow').className = 'arrow arrow2';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 2) {
+			players[x]['arrow'] = 3;
+			document.getElementById(x+'_arrow').className = 'arrow arrow3';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 3) {
+			players[x]['arrow'] = 4;
+			document.getElementById(x+'_arrow').className = 'arrow arrow4';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 4) {
+			players[x]['arrow'] = 5;
+			document.getElementById(x+'_arrow').className = 'arrow arrow5';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 5) {
+			players[x]['arrow'] = 6;
+			document.getElementById(x+'_arrow').className = 'arrow arrow6';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 6) {
+			players[x]['arrow'] = 7;
+			document.getElementById(x+'_arrow').className = 'arrow arrow7';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 7) {
+			players[x]['arrow'] = 8;
+			document.getElementById(x+'_arrow').className = 'arrow arrow8';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 8) {
+			players[x]['arrow'] = 9;
+			document.getElementById(x+'_arrow').className = 'arrow arrow9';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 9) {
+			players[x]['arrow'] = 10;
+			document.getElementById(x+'_arrow').className = 'arrow arrow10';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 10) {
+			players[x]['arrow'] = 11;
+			document.getElementById(x+'_arrow').className = 'arrow arrow11';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 11) {
+			players[x]['arrow'] = 12;
+			document.getElementById(x+'_arrow').className = 'arrow arrow12';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 12) {
+			players[x]['arrow'] = 13;
+			document.getElementById(x+'_arrow').className = 'arrow arrow13';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 13) {
+			players[x]['arrow'] = 14;
+			document.getElementById(x+'_arrow').className = 'arrow arrow14';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 14) {
+			players[x]['arrow'] = 15;
+			document.getElementById(x+'_arrow').className = 'arrow arrow15';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 15) {
+			players[x]['arrow'] = 16;
+			document.getElementById(x+'_arrow').className = 'arrow arrow16';
+			document.getElementById(x+'_arrow').style.display = 'block';
+		}
+		else if(players[x]['arrow'] == 16) {
+			players[x]['arrow'] = 0;
+			document.getElementById(x+'_arrow').style.display = 'none';
+			document.getElementById(x+'_arrow').className = 'arrow';
+		}
+	}
+
+	function displayPlayerArrows2(x) {
+		var otherArrow = document.getElementById(x+'_arrow');
+		if(otherArrow.className == 'arrow arrow1') {
+			otherArrow.className = 'arrow';
+			players[x]['arrow'] = 0;
+			document.getElementById(x+'_arrow').style.display = 'none';
+		}
+		else if(otherArrow.className == 'arrow arrow2') {
+			otherArrow.className = 'arrow arrow1';
+			players[x]['arrow'] = 1;
+		}
+		else if(otherArrow.className == 'arrow arrow3') {
+			otherArrow.className = 'arrow arrow2';
+			players[x]['arrow'] = 2;
+		}
+		else if(otherArrow.className == 'arrow arrow4') {
+			otherArrow.className = 'arrow arrow3';
+			players[x]['arrow'] = 3;
+		}
+		else if(otherArrow.className == 'arrow arrow5') {
+			otherArrow.className = 'arrow arrow4';
+			players[x]['arrow'] = 4;
+		}
+		else if(otherArrow.className == 'arrow arrow6') {
+			otherArrow.className = 'arrow arrow5';
+			players[x]['arrow'] = 5;
+		}
+		else if(otherArrow.className == 'arrow arrow7') {
+			otherArrow.className = 'arrow arrow6';
+			players[x]['arrow'] = 6;
+		}
+		else if(otherArrow.className == 'arrow arrow8') {
+			otherArrow.className = 'arrow arrow7';
+			players[x]['arrow'] = 7;
+		}
+		else if(otherArrow.className == 'arrow arrow9') {
+			otherArrow.className = 'arrow arrow8';
+			players[x]['arrow'] = 8;
+		}
+		else if(otherArrow.className == 'arrow arrow10') {
+			otherArrow.className = 'arrow arrow9';
+			players[x]['arrow'] = 9;
+		}
+		else if(otherArrow.className == 'arrow arrow11') {
+			otherArrow.className = 'arrow arrow10';
+			players[x]['arrow'] = 10;
+		}
+		else if(otherArrow.className == 'arrow arrow12') {
+			otherArrow.className = 'arrow arrow11';
+			players[x]['arrow'] = 11;
+		}
+		else if(otherArrow.className == 'arrow arrow13') {
+			otherArrow.className = 'arrow arrow12';
+			players[x]['arrow'] = 12;
+		}
+		else if(otherArrow.className == 'arrow arrow14') {
+			otherArrow.className = 'arrow arrow13';
+			players[x]['arrow'] = 13;
+		}
+		else if(otherArrow.className == 'arrow arrow15') {
+			otherArrow.className = 'arrow arrow14';
+			players[x]['arrow'] = 14;
+		}
+		else if(otherArrow.className == 'arrow arrow16') {
+			otherArrow.className = 'arrow arrow15';
+			players[x]['arrow'] = 15;
+		}
+		else if(otherArrow.className == 'arrow') {
+			otherArrow.className = 'arrow arrow16';
+			players[x]['arrow'] = 16;
+		}
+
+		if(html5_storage == 1) {
+			localStorage[x + '_arrow2'] = players[x]['arrow2']; //always needs to stay one click behind, so 'onload' works properly
+			if(localStorage[x + '_arrow'] == players[x]['arrow']) {
+				localStorage[x + '_arrow'] = localStorage[x + '_arrow'] - 1;
+				if(localStorage[x + '_arrow'] == -1) {
+					localStorage[x + '_arrow'] = 16;
+				}
+			}
+		}
+
+		if(players[x]['arrow2'] == 0) {
+			players[x]['arrow2'] = 1;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow1';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 1) {
+			players[x]['arrow2'] = 2;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow2';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 2) {
+			players[x]['arrow2'] = 3;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow3';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 3) {
+			players[x]['arrow2'] = 4;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow4';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 4) {
+			players[x]['arrow2'] = 5;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow5';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 5) {
+			players[x]['arrow2'] = 6;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow6';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 6) {
+			players[x]['arrow2'] = 7;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow7';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 7) {
+			players[x]['arrow2'] = 8;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow8';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 8) {
+			players[x]['arrow2'] = 9;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow9';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 9) {
+			players[x]['arrow2'] = 10;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow10';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 10) {
+			players[x]['arrow2'] = 11;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow11';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 11) {
+			players[x]['arrow2'] = 12;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow12';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 12) {
+			players[x]['arrow2'] = 13;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow13';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 13) {
+			players[x]['arrow2'] = 14;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow14';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 14) {
+			players[x]['arrow2'] = 15;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow15';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 15) {
+			players[x]['arrow2'] = 16;
+			document.getElementById(x+'_arrow2').className = 'arrow arrow16';
+			document.getElementById(x+'_arrow2').style.display = 'block';
+		}
+		else if(players[x]['arrow2'] == 16) {
+			players[x]['arrow2'] = 0;
+			document.getElementById(x+'_arrow2').style.display = 'none';
+			document.getElementById(x+'_arrow2').className = 'arrow';
+		}
+	}
+
+	function defaultFormation() {
+		document.getElementById('keyboardmessage').style.display = 'none';
+		document.getElementById('keyboardmessage').setAttribute('onclick', '');
+
+		point_it(null, Math.round(81 / newPitchWidthRatio), Math.round(460 / newPitchHeightRatio));
+		point_it(null, Math.round(184 / newPitchWidthRatio), Math.round(490 / newPitchHeightRatio));
+		point_it(null, Math.round(290 / newPitchWidthRatio), Math.round(490 / newPitchHeightRatio));
+		point_it(null, Math.round(399 / newPitchWidthRatio), Math.round(460 / newPitchHeightRatio));
+		point_it(null, Math.round(92 / newPitchWidthRatio), Math.round(270 / newPitchHeightRatio));
+		point_it(null, Math.round(184 / newPitchWidthRatio), Math.round(330 / newPitchHeightRatio));
+		point_it(null, Math.round(290 / newPitchWidthRatio), Math.round(330 / newPitchHeightRatio));
+		point_it(null, Math.round(380 / newPitchWidthRatio), Math.round(270 / newPitchHeightRatio));
+		point_it(null, Math.round(184 / newPitchWidthRatio), Math.round(150 / newPitchHeightRatio));
+		point_it(null, Math.round(290 / newPitchWidthRatio), Math.round(150 / newPitchHeightRatio));
+	}
+
+	var current_boxData = 'lineup';
+
+	function boxData(option) {
+		if((option == 'lineup' && current_boxData != 'lineup') || (option == 'home' && current_boxData != 'home') || (option == 'away' && current_boxData != 'away') || (option == 'info' && current_boxData != 'info')) {
+			var oldLink = document.getElementById('boxlink_'+current_boxData);
+			var oldData = document.getElementById('boxdata_'+current_boxData);
+			current_boxData = option;
+			var newLink = document.getElementById('boxlink_'+current_boxData);
+			var newData = document.getElementById('boxdata_'+current_boxData);
+
+			oldLink.className = oldLink.className.replace(/selected/,'');
+			oldLink.tabIndex = '';
+			newLink.className += ' selected';
+			oldData.style.display = 'none';
+			newData.style.display = 'block';
+		}
+	}
+
+	function formation(team) {
+		var formation_defender = 0;
+		var formation_defensive_midfielder = 0;
+		var formation_midfielder = 0;
+		var formation_attacker = 0;
+		var formationArray = [];
+		if(team == 'home') {
+			var begin = 1;
+			var end = 10;
+		}
+		else if(team == 'away') {
+			var begin = 12;
+			var end = 21;
+		}
+		for(var i = begin; i <= end; i++) {
+
+			var coordinate = players['player'+i]['top'];
+
+			if(coordinate >= formation_coordinates[team]['attacker']['topMin'] && coordinate < formation_coordinates[team]['attacker']['topMax']) { //attacker
+				formation_attacker++;
+			}
+			else if(coordinate >= formation_coordinates[team]['midfielder']['topMin'] && coordinate < formation_coordinates[team]['midfielder']['topMax']) { //midfielder
+				formation_midfielder++;
+			}
+			else if(coordinate >= formation_coordinates[team]['defensive_midfielder']['topMin'] && coordinate < formation_coordinates[team]['defensive_midfielder']['topMax']) { //defensive midfielder
+				formation_defensive_midfielder++;
+			}
+			else if(coordinate >= formation_coordinates[team]['defender']['topMin'] && coordinate <= formation_coordinates[team]['defender']['topMax']) { //defender
+				formation_defender++;
+			}
+		}
+		if(formation_defender > 0) {
+			formationArray.push(formation_defender);
+		}
+		if(formation_defensive_midfielder > 0) {
+			formationArray.push(formation_defensive_midfielder);
+		}
+		if(formation_midfielder > 0) {
+			formationArray.push(formation_midfielder);
+		}
+		if(formation_attacker > 0) {
+			formationArray.push(formation_attacker);
+		}
+		if(formationArray.length == 1) {
+			if(formation_defender > 0 || formation_defensive_midfielder > 0) {
+				document.getElementById('formation_'+team).firstChild.nodeValue = formationArray[0] + '-0-0';
+			}
+			else if(formation_midfielder > 0) {
+				document.getElementById('formation_'+team).firstChild.nodeValue = '0-' + formationArray[0] + '-0';
+			}
+			else if(formation_attacker > 0) {
+				document.getElementById('formation_'+team).firstChild.nodeValue = '0-0-' + formationArray[0];
+			}
+		}
+		else if(formationArray.length == 2) {
+			if((formation_defender > 0 && formation_defensive_midfielder > 0) || (formation_defensive_midfielder > 0 && formation_midfielder > 0) || (formation_defender > 0 && formation_midfielder > 0)) {
+				document.getElementById('formation_'+team).firstChild.nodeValue = formationArray[0] + '-' + formationArray[1] + '-0';
+			}
+			else if((formation_defender > 0 && formation_attacker > 0) || (formation_defensive_midfielder > 0 && formation_attacker > 0)) {
+				document.getElementById('formation_'+team).firstChild.nodeValue = formationArray[0] + '-0-' + formationArray[1];
+			}
+			else if(formation_midfielder > 0 && formation_attacker > 0) {
+				document.getElementById('formation_'+team).firstChild.nodeValue = '0-' + formationArray[0] + '-' + formationArray[1];
+			}
+		}
+		else if(formationArray.length == 3) {
+			if(formation_attacker == 0) { //use this if a team plays a formation with no strikers
+				document.getElementById('formation_'+team).firstChild.nodeValue = formationArray[0] + '-' + formationArray[1] + '-' + formationArray[2] + '-0';
+			}
+			else {
+				document.getElementById('formation_'+team).firstChild.nodeValue = formationArray[0] + '-' + formationArray[1] + '-' + formationArray[2];
+			}
+		}
+		else if(formationArray.length == 4) {
+			document.getElementById('formation_'+team).firstChild.nodeValue = formationArray[0] + '-' + formationArray[1] + '-' + formationArray[2] + '-' + formationArray[3];
+		}
+	}
+
+	var picker_red = '';
+	var picker_green = '';
+	var picker_blue = '';
+	var picker_mix = '';
+	var picker_hidden = '';
+	var picker_red_value = '';
+	var picker_green_value = '';
+	var picker_blue_value = '';
+
+	var custom_type = '';
+	var custom_id = '';
+	var custom_label = '';
+
+	function customColour(colourType, x, label) {
+		custom_type = colourType;
+		custom_id = x;
+		custom_label = label;
+		picker_red = document.getElementById('picker_red');
+		picker_green = document.getElementById('picker_green');
+		picker_blue = document.getElementById('picker_blue');
+		picker_mix = document.getElementById('picker_mix');
+		picker_hidden = document.getElementById('picker_hidden');
+		picker_red_value = document.getElementById('picker_red_value');
+		picker_green_value = document.getElementById('picker_green_value');
+		picker_blue_value = document.getElementById('picker_blue_value');
+		var currentCustomColour = document.getElementById(custom_id).value;
+		document.getElementById('colourpicker').style.visibility = 'visible';
+		document.getElementById('overlay').style.visibility = 'visible';
+		picker_red.value = hexToRgb(currentCustomColour).r;
+		picker_green.value = hexToRgb(currentCustomColour).g;
+		picker_blue.value = hexToRgb(currentCustomColour).b;
+		picker_mix.style.backgroundColor = currentCustomColour;
+		picker_hidden.value = currentCustomColour;
+	}
+
+	function customColourChange() {
+		picker_mix.style.backgroundColor = rgbToHex(parseInt(picker_red.value), parseInt(picker_green.value), parseInt(picker_blue.value));
+		picker_red_value.firstChild.nodeValue = picker_red.value;
+		picker_green_value.firstChild.nodeValue = picker_green.value;
+		picker_blue_value.firstChild.nodeValue = picker_blue.value;
+		picker_hidden.value = rgbToHex(parseInt(picker_red.value), parseInt(picker_green.value), parseInt(picker_blue.value));
+	}
+
+	function customColourSubmit() {
+		changeColour(custom_type, picker_hidden.value, custom_id);
+		document.getElementById(custom_label).style.backgroundColor = picker_mix.style.backgroundColor;
+		document.getElementById(custom_id).value = picker_hidden.value;
+		document.getElementById('colourpicker').style.visibility = 'hidden';
+		document.getElementById('overlay').style.visibility = 'hidden';
+	}
+
+	function customColourCancel() {
+		document.getElementById('colourpicker').style.visibility = 'hidden';
+		document.getElementById('overlay').style.visibility = 'hidden';
+		document.getElementById(custom_id).checked = false;
+	}
+
+	var swos_primarycolour = 'c8232a';
+	var swos_secondarycolour = 'f8f837';
+	var swos_primarycolour2 = 'ffffff';
+	var swos_secondarycolour2 = '1c1b2d';
+
+	function changeColour(colourType, colourValue, x) {
+		var colourValueNoHash = colourValue.replace('#','');
+		can_they_submit = 1;
+		if(colourType == 'primary') {
+			document.getElementById('teamcolour').style.backgroundColor = colourValue;
+			for(var i = 1; i <= 10; i++) {
+				document.getElementById('player'+i+'_kit').style.backgroundColor = colourValue;
+				swos_primarycolour = colourValue.replace('#','');
+				//var colourValueNoHash2 = document.getElementById('teamname').style.color;
+				//var colourValueNoHash2 = document.getElementById('secondary_colour').value;
+				//colourValueNoHash2 = colourValueNoHash2.replace('#','');
+				document.getElementById('player'+i+'_swos').style.backgroundImage = "url('/images/swos.svg?primary="+swos_primarycolour+"&secondary="+swos_secondarycolour+"')";
+			}
+			if(html5_storage == 1) {
+				localStorage['primarycolour'] = colourValue;
+				localStorage['primarycolour_id'] = x;
+			}
+		}
+		else if(colourType == 'secondary') {
+			document.getElementById('teamname').style.color = colourValue;
+			for(var i = 0; i <= 10; i++) {
+				document.getElementById('player'+i+'_kit').style.borderColor = colourValue;
+				swos_secondarycolour = colourValue.replace('#','');
+				//var colourValueNoHash2 = document.getElementById('teamcolour').style.backgroundColor;
+				//colourValueNoHash2 = colourValueNoHash2.replace('#','');
+				if(i == 0) {
+					document.getElementById('player0_swos').style.backgroundImage = "url('/images/swos.svg?primary=398d13&secondary="+swos_secondarycolour+"')";
+				}
+				else if(i > 0) {
+					document.getElementById('player'+i+'_swos').style.backgroundImage = "url('/images/swos.svg?primary="+swos_primarycolour+"&secondary="+swos_secondarycolour+"')";
+				}
+			}
+			if(html5_storage == 1) {
+				localStorage['secondarycolour'] = colourValue;
+				localStorage['secondarycolour_id'] = x;
+			}
+		}
+		else if(colourType == 'primary2') {
+			document.getElementById('teamcolour2').style.backgroundColor = colourValue;
+			for(var i = 12; i <= 21; i++) {
+				document.getElementById('player'+i+'_kit').style.backgroundColor = colourValue;
+				swos_primarycolour2 = colourValue.replace('#','');
+				//var colourValueNoHash2 = document.getElementById('teamname2').style.color;
+				//colourValueNoHash2 = colourValueNoHash2.replace('#','');
+				document.getElementById('player'+i+'_swos').style.backgroundImage = "url('/images/swos.svg?primary="+swos_primarycolour2+"&secondary="+swos_secondarycolour2+"')";
+			}
+			if(html5_storage == 1) {
+				localStorage['primarycolour2'] = colourValue;
+				localStorage['primarycolour2_id'] = x;
+			}
+		}
+		else if(colourType == 'secondary2') {
+			document.getElementById('teamname2').style.color = colourValue;
+			for(var i = 11; i <= 21; i++) {
+				document.getElementById('player'+i+'_kit').style.borderColor = colourValue;
+				swos_secondarycolour2 = colourValue.replace('#','');
+				//var colourValueNoHash2 = document.getElementById('teamcolour2').style.backgroundColor;
+				//colourValueNoHash2 = colourValueNoHash2.replace('#','');
+				if(i == 11) {
+					document.getElementById('player11_swos').style.backgroundImage = "url('/images/swos.svg?primary=398d13&secondary="+swos_secondarycolour2+"')";
+				}
+				else if(i > 11) {
+					document.getElementById('player'+i+'_swos').style.backgroundImage = "url('/images/swos.svg?primary="+swos_primarycolour2+"&secondary="+swos_secondarycolour2+"')";
+				}
+				//document.getElementById('player'+i+'_swos').style.backgroundImage = "url('/swos.svg?primary="+swos_primarycolour2+"&secondary="+swos_secondarycolour2+"')";
+			}
+			if(html5_storage == 1) {
+				localStorage['secondarycolour2'] = colourValue;
+				localStorage['secondarycolour2_id'] = x;
+			}
+		}
+	}
+
+	function updateTextbox(x) {
+		can_they_submit = 1;
+		if(x == 'yourteam') {
+			if(document.getElementById('yourteam').value == '') {
+				document.getElementById('teamname').firstChild.nodeValue = '\u00A0'; //use instead of '&nbsp;'
+				document.getElementById('table_lineup_home_title').firstChild.nodeValue = '\u00A0';
+			}
+			else {
+				document.getElementById('teamname').firstChild.nodeValue = document.getElementById('yourteam').value;
+				document.getElementById('table_lineup_home_title').firstChild.nodeValue = document.getElementById('yourteam').value;
+			}
+			if(html5_storage == 1) {
+				localStorage['yourteam'] = document.getElementById('yourteam').value;
+			}
+		}
+		else if(x == 'theirteam') {
+			if(document.getElementById('theirteam').value == '') {
+				document.getElementById('teamname2').firstChild.nodeValue = '\u00A0'; //use instead of '&nbsp;'
+				document.getElementById('table_lineup_away_title').firstChild.nodeValue = '\u00A0';
+			}
+			else {
+				document.getElementById('teamname2').firstChild.nodeValue = document.getElementById('theirteam').value;
+				document.getElementById('table_lineup_away_title').firstChild.nodeValue = document.getElementById('theirteam').value;
+			}
+			if(html5_storage == 1) {
+				localStorage['theirteam'] = document.getElementById('theirteam').value;
+			}
+		}
+		else if(x == 'competition') {
+			document.getElementById('bodytag').style.backgroundColor = changeBGcolor(document.getElementById('competition').value);
+			changePitchcolor(document.getElementById('competition').value);
+			if(html5_storage == 1) {
+				localStorage['competition'] = document.getElementById('competition').value;
+			}
+		}
+		else if(x == 'date') {
+			if(html5_storage == 1) {
+				var inputDate = document.getElementById('date').value;
+				var inputMonth = document.getElementById('month').value;
+				var inputYear = document.getElementById('year').value;
+				if(inputDate == '') {
+					inputDate = 'dd';
+				}
+				if(inputMonth == '') {
+					inputMonth = 'mm';
+				}
+				if(inputYear == '') {
+					inputYear = 'yyyy';
+				}
+				localStorage['date'] = inputYear + '-' + inputMonth + '-' + inputDate;
+			}
+		}
+		else if(x == 'dateNew') {
+			if(html5_storage == 1) {
+				localStorage['date'] = document.getElementById('date').value;
+			}
+		}
+		else if(x == 'notes') {
+			if(html5_storage == 1) {
+				localStorage['notes'] = document.getElementById('notes').value;
+			}
+		}
+		else {
+			var currentTextbox = document.getElementById('textbox_'+x);
+			document.getElementById('td_'+x).firstChild.nodeValue = currentTextbox.value;
+			var realplayer = currentTextbox.getAttribute('data-player');
+			players[realplayer]['name'] = currentTextbox.value;
+
+			if(html5_storage == 1) {
+				localStorage['textbox_'+x] = currentTextbox;
+			}
+		}
+	}
+
+	var clickDownX, clickDownY, clickUpX, clickUpY, playerID;
+
+	var we_are_moving = 0;
+
+	function startDrag(e, player) {
+
+		can_they_submit = 1;
+
+		we_are_moving = 1; //when the user is moving a player it stops their finger inadvertently creating a new player at the same time
+
+		clickDownX = player.offsetLeft;
+		clickDownY = player.offsetTop;
+		clickUpX = player.offsetLeft;
+		clickUpY = player.offsetTop;
+		playerID = player.id;
+
+		if (e.type === 'touchstart') {
+			player.onmousedown = null;
+			player.ontouchmove = moveDrag;
+			player.ontouchend = function () {
+				if(clickDownX == clickUpX && clickDownY == clickUpY) {
+					displayPlayerArrows(playerID);
+				}
+				player.ontouchmove = null;
+				player.ontouchend = null;
+				playerCoordinates();
+				formation('home');
+				formation('away');
+				whatPosition();
+				reorder('home');
+				reorder('away');
+			}
+		} else {
+			document.onmousemove = moveDrag;
+			document.onmouseup = function () {
+				if(clickDownX == clickUpX && clickDownY == clickUpY) {
+					displayPlayerArrows(playerID);
+				}
+				document.onmousemove = null;
+				document.onmouseup = null;
+				playerCoordinates();
+				formation('home');
+				formation('away');
+				whatPosition();
+				reorder('home');
+				reorder('away');
+			}
+		}
+
+		var pos = [player.offsetLeft,player.offsetTop];
+		var origin = getCoors(e);
+
+
+		function moveDrag (e) {
+			var currentPos = getCoors(e);
+			var deltaX = currentPos[0] - origin[0];
+			var deltaY = currentPos[1] - origin[1];
+			player.style.left = (pos[0] + deltaX) + 'px';
+			player.style.top  = (pos[1] + deltaY) + 'px';
+
+			if(pos[0] + deltaX < edgeXmin) { //use these to force players to stay in-bounds
+				player.style.left = edgeXmin + 'px';
+			}
+			else if(pos[0] + deltaX > edgeXmax) {
+				player.style.left = edgeXmax + 'px';
+			}
+			else {
+				player.style.left = (pos[0] + deltaX) + 'px';
+			}
+			if(pos[1] + deltaY < edgeYmin) {
+				player.style.top = edgeYmin + 'px';
+			}
+			else if(pos[1] + deltaY > edgeYmax) {
+				player.style.top = edgeYmax + 'px';
+			}
+			else {
+				player.style.top = (pos[1] + deltaY) + 'px';
+			}
+			clickUpX = player.style.left;
+			clickUpY = player.style.top;
+			clickUpX = clickUpX.replace(/\D/g,'');
+			clickUpY = clickUpY.replace(/\D/g,'');
+
+			e.preventDefault();
+			return false;
+		}
+
+		function getCoors(e) {
+			var coors = [];
+			if (e.touches && e.touches.length) {
+				coors[0] = e.touches[0].clientX;
+				coors[1] = e.touches[0].clientY;
+			} else {
+				coors[0] = e.clientX;
+				coors[1] = e.clientY;
+			}
+			return coors;
+		}
+	}
+
+	var edgeXmin, edgeXmax, edgeYmin, edgeYmax, edgeXminMaster, edgeXmaxMaster, edgeYminMaster, edgeYmaxMaster;
+
+	var position_coordinates = {};
+	var formation_coordinates = {};
+
+	function coordinatesLandscape() {
+		edgeXminMaster = 50;
+		edgeXmaxMaster = 424;
+		edgeYminMaster = 46;
+		edgeYmaxMaster = 587;
+
+		edgeXmin = Math.round(edgeXminMaster / newPitchWidthRatio);
+		edgeXmax = Math.round(edgeXmaxMaster / newPitchWidthRatio);
+		edgeYmin = Math.round(edgeYminMaster / newPitchHeightRatio);
+		edgeYmax = Math.round(edgeYmaxMaster / newPitchHeightRatio);
+
+		position_coordinates = {
+			'home': {
+				'LB': {
+					topMin: 413,
+					topMax: 587,
+					leftMin: 50,
+					leftMax: 130
+				},
+				'DC': {
+					topMin: 413,
+					topMax: 587,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'RB': {
+					topMin: 413,
+					topMax: 587,
+					leftMin: 345,
+					leftMax: 424
+				},
+				'LWB': {
+					topMin: 338,
+					topMax: 413,
+					leftMin: 50,
+					leftMax: 130
+				},
+				'DMC': {
+					topMin: 376,
+					topMax: 413,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'MC': {
+					topMin: 338,
+					topMax: 376,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'RWB': {
+					topMin: 338,
+					topMax: 413,
+					leftMin: 345,
+					leftMax: 424
+				},
+				'LW': {
+					topMin: 178,
+					topMax: 338,
+					leftMin: 50,
+					leftMax: 130
+				},
+				'AMC': {
+					topMin: 258,
+					topMax: 338,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'SS': {
+					topMin: 178,
+					topMax: 258,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'RW': {
+					topMin: 178,
+					topMax: 338,
+					leftMin: 345,
+					leftMax: 424
+				},
+				'LWF': {
+					topMin: 46,
+					topMax: 178,
+					leftMin: 50,
+					leftMax: 130
+				},
+				'FC': {
+					topMin: 46,
+					topMax: 178,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'RWF': {
+					topMin: 46,
+					topMax: 178,
+					leftMin: 345,
+					leftMax: 424
+				}
+			},
+			'away': {
+				'LB': {
+					topMin: 46,
+					topMax: 220,
+					leftMin: 345,
+					leftMax: 424
+				},
+				'DC': {
+					topMin: 46,
+					topMax: 220,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'RB': {
+					topMin: 46,
+					topMax: 220,
+					leftMin: 50,
+					leftMax: 130
+				},
+				'LWB': {
+					topMin: 220,
+					topMax: 295,
+					leftMin: 345,
+					leftMax: 424
+				},
+				'DMC': {
+					topMin: 220,
+					topMax: 258,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'MC': {
+					topMin: 258,
+					topMax: 295,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'RWB': {
+					topMin: 220,
+					topMax: 295,
+					leftMin: 50,
+					leftMax: 130
+				},
+				'LW': {
+					topMin: 295,
+					topMax: 455,
+					leftMin: 345,
+					leftMax: 424
+				},
+				'AMC': {
+					topMin: 295,
+					topMax: 375,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'SS': {
+					topMin: 375,
+					topMax: 455,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'RW': {
+					topMin: 295,
+					topMax: 455,
+					leftMin: 50,
+					leftMax: 130
+				},
+				'LWF': {
+					topMin: 455,
+					topMax: 587,
+					leftMin: 345,
+					leftMax: 424
+				},
+				'FC': {
+					topMin: 455,
+					topMax: 587,
+					leftMin: 130,
+					leftMax: 345
+				},
+				'RWF': {
+					topMin: 455,
+					topMax: 587,
+					leftMin: 50,
+					leftMax: 130
+				}
+			}
+		};
+
+		formation_coordinates = {
+			'home': {
+				'attacker': {
+					topMin: 46,
+					topMax: 178
+				},
+				'midfielder': {
+					topMin: 178,
+					topMax: 338
+				},
+				'defensive_midfielder': {
+					topMin: 338,
+					topMax: 413
+				},
+				'defender': {
+					topMin: 413,
+					topMax: 587
+				}
+			},
+			'away': {
+				'attacker': {
+					topMin: 455,
+					topMax: 587
+				},
+				'midfielder': {
+					topMin: 295,
+					topMax: 455
+				},
+				'defensive_midfielder': {
+					topMin: 220,
+					topMax: 295
+				},
+				'defender': {
+					topMin: 46,
+					topMax: 220
+				}
+			}
+		};
+	}
+
+	function enable_opposition() {
+		document.getElementById('enable_opposition').style.display = 'none';
+		document.getElementById('pitch').style.cursor = 'copy';
+		document.getElementById('menu_submit').style.display = 'none';
+		point_it_done = 0;
+		player_num = 11; //move counter along, so it skips past opposition goalie
+		elementPlayer['player11'].style.top = Math.round(46 / newPitchHeightRatio) + 'px';
+		elementPlayer['player11'].style.left = Math.round(239 / newPitchWidthRatio) + 'px';
+		elementPlayer['player11'].style.visibility = 'visible';
+		document.getElementById('tab_home').firstChild.nodeValue = 'Home';
+		document.getElementById('header_home').firstChild.nodeValue = 'Home Team';
+		document.getElementById('tab_li_away').style.display = 'inline-block';
+		document.getElementById('header_lineup').firstChild.nodeValue = 'Lineups';
+		document.getElementById('tab_lineup').firstChild.nodeValue = 'Lineups';
+		document.getElementById('teamcolour').className = 'colourhalf';
+		document.getElementById('teamname').className = 'namehalf';
+		document.getElementById('teamname2').style.display = 'block';
+		document.getElementById('primary_colour2_2').checked = true;
+		document.getElementById('secondary_colour2_10').checked = true;
+		document.getElementById('lineup_table_home').className = 'lineup_table_half lineup_table_home_half';
+		document.getElementById('lineup_table_away').style.display = 'inline-block';
+		document.getElementById('theirteam').value = 'Away team';
+		if(html5_storage == 1) {
+			if(!localStorage['theirteam'] || localStorage['theirteam'] == '') {
+				localStorage['theirteam'] = 'Away team';
+			}
+		}
+	}
+
+	function startAgain() {
+		swos_primarycolour = 'c8232a';
+		swos_secondarycolour = 'f8f837';
+		swos_primarycolour2 = 'ffffff';
+		swos_secondarycolour2 = '1c1b2d';
+		player_num = 0;
+		point_it_done = 0;
+
+
+
+
+    var thisisnotes = document.getElementById('notes').value;
+
+		//alert to test data collection
+		//var localStrg = localStorage['yourteam'];
+    //alert(localStrg);
+
+		// for(var i = 0; i <= 21; i++) {
+		// 	alert(document.getElementById('form_player'+i+'_name').value = players['player'+i]['name']);
+		// 	alert(document.getElementById('form_player'+i+'_position').value = players['player'+i]['position']);
+		// 	alert(document.getElementById('form_player'+i+'_top').value = players['player'+i]['top']);
+		// 	alert(document.getElementById('form_player'+i+'_left').value = players['player'+i]['left']);
+		// 	alert(document.getElementById('form_player'+i+'_arrow').value = players['player'+i]['arrow']);
+		// 	alert(document.getElementById('form_player'+i+'_arrow2').value = players['player'+i]['arrow2']);
+		// }
+
+
+
+
+		document.getElementById('menu_submit').style.display = 'none';
+		document.getElementById('menu_clear').style.display = 'none';
+				document.getElementById('enable_opposition').style.display = 'none';
+		populatePlayerArray();
+		document.getElementById('yourteam').value = 'Your team'
+		document.getElementById('teamname').firstChild.nodeValue = 'Your team';
+		document.getElementById('table_lineup_home_title').firstChild.nodeValue = 'Your team';
+		document.getElementById('theirteam').value = ''
+		document.getElementById('teamname2').firstChild.nodeValue = 'Away team';
+		document.getElementById('table_lineup_away_title').firstChild.nodeValue = 'Away team';
+		document.getElementById('competition').value = ''
+		document.getElementById('bodytag').style.backgroundColor = '#212121';
+		// document.getElementById('pitch').style.backgroundImage="url('/images/pitch.svg')";
+		// if(!supportsSVG()) {
+		// 	document.getElementById('pitch').style.backgroundImage="url('/images/pitch.png')";
+		// }
+		if(textboxDate.type == 'date' && date_input_problem == 0) { //if browser supports 'date' input
+			document.getElementById('date').value = '';
+		}
+		else {
+			document.getElementById('date').value = '';
+			document.getElementById('month').value = '';
+			document.getElementById('year').value = '';
+		}
+		document.getElementById('notes').value = '';
+		document.getElementById('teamcolour').style.backgroundColor = '#c8232a';
+		document.getElementById('teamname').style.color = '#F8F837';
+		document.getElementById('teamcolour2').style.backgroundColor = '#ffffff';
+		document.getElementById('teamname2').style.color = '#1C1B2D';
+		document.getElementById('player0_kit').style.borderColor = '#F8F837';
+		document.getElementById('player0_swos').style.backgroundImage = "url('/images/swos.svg?primary=398d13&secondary=F8F837')";
+		document.getElementById('player11_kit').style.borderColor = '#1C1B2D';
+		document.getElementById('player11_swos').style.backgroundImage = "url('/images/swos.svg?primary=398d13&secondary=1C1B2D')";
+		document.getElementById('player11').style.visibility = 'hidden';
+		document.getElementById('primary_colour_7').checked = true;
+		document.getElementById('secondary_colour_3').checked = true;
+		document.getElementById('primary_colour2_2').checked = true;
+		document.getElementById('secondary_colour2_10').checked = true;
+		document.getElementById('formation_home').firstChild.nodeValue = '\u00A0';
+		document.getElementById('formation_away').firstChild.nodeValue = '\u00A0';
+		document.getElementById('player0').setAttribute('data-playername', 'Goalie');
+		document.getElementById('player11').setAttribute('data-playername', 'Goalie');
+		document.getElementById('tab_home').firstChild.nodeValue = 'Team';
+		document.getElementById('header_home').firstChild.nodeValue = 'Team';
+		document.getElementById('tab_li_away').style.display = 'none';
+		document.getElementById('header_lineup').firstChild.nodeValue = 'Lineup';
+		document.getElementById('tab_lineup').firstChild.nodeValue = 'Lineup';
+		document.getElementById('teamcolour').className = 'colourfull';
+		document.getElementById('teamname').className = 'namefull';
+		document.getElementById('teamname2').style.display = 'none';
+		document.getElementById('lineup_table_home').className = 'lineup_table_full';
+		document.getElementById('lineup_table_away').style.display = 'none';
+
+		for(var i = 1; i <= 21; i++) {
+			if(i != 11) {
+				if(i <= 10) {
+					document.getElementById('player'+i+'_kit').style.backgroundColor = '#c8232a';
+					document.getElementById('player'+i+'_kit').style.borderColor = '#F8F837';
+					document.getElementById('player'+i+'_swos').style.backgroundImage = "url('/images/swos.svg?primary=c8232a&secondary=F8F837')";
+				}
+				else {
+					document.getElementById('player'+i+'_kit').style.backgroundColor = '#ffffff';
+					document.getElementById('player'+i+'_kit').style.borderColor = '#1C1B2D';
+					document.getElementById('player'+i+'_swos').style.backgroundImage = "url('/images/swos.svg?primary=ffffff&secondary=1C1B2D')";
+				}
+				document.getElementById('player'+i+'_arrow').style.display = 'none';
+				document.getElementById('player'+i+'_arrow').className = 'arrow';
+				document.getElementById('player'+i+'_arrow2').style.display = 'none';
+				document.getElementById('player'+i+'_arrow2').className = 'arrow';
+				document.getElementById('player'+i).style.left = '0px';
+				document.getElementById('player'+i).style.top = '0px';
+				document.getElementById('player'+i).style.display = 'none';
+				document.getElementById('player'+i).setAttribute('data-playername', '');
+			}
+		}
+		for(var i = 0; i <= 10; i++) {
+			var td_player = document.getElementById('td_player'+i);
+			var td_position = document.getElementById('td_position'+i);
+			var tempNodes = td_player.childNodes;
+			for(var n = 0; n < tempNodes.length; n++) {
+				td_player.removeChild(tempNodes[n]);
+			}
+			var tempNodes = td_position.childNodes;
+			for(var n = 0; n < tempNodes.length; n++) {
+				td_position.removeChild(tempNodes[n]);
+			}
+			if(i == 0) {
+				td_player.appendChild(document.createTextNode('Goalie'));
+				td_position.appendChild(document.createTextNode('GK'));
+			}
+			else {
+				td_player.appendChild(document.createTextNode('\u00A0'));
+				td_position.appendChild(document.createTextNode('\u00A0'));
+			}
+		}
+
+		if(html5_storage == 1) {
+			delete localStorage['yourteam'];
+			delete localStorage['theirteam'];
+			delete localStorage['competition'];
+			delete localStorage['date'];
+			delete localStorage['notes'];
+			delete localStorage['primarycolour'];
+			delete localStorage['primarycolour_id'];
+			delete localStorage['secondarycolour'];
+			delete localStorage['secondarycolour_id'];
+			delete localStorage['primarycolour2'];
+			delete localStorage['primarycolour2_id'];
+			delete localStorage['secondarycolour2'];
+			delete localStorage['secondarycolour2_id'];
+			delete localStorage['player0_name'];
+			delete localStorage['player11_name'];
+			for(var i = 1; i <= 21; i++) {
+				if(i != 11) {
+					delete localStorage['player' + i + '_name'];
+					delete localStorage['player' + i + '_left'];
+					delete localStorage['player' + i + '_top'];
+					delete localStorage['player' + i + '_arrow'];
+					delete localStorage['player' + i + '_arrow2'];
+				}
+			}
+		}
+		boxData('lineup'); //show first tab (incase the 'away team' tab is currently selected)
+
+
+	}
+
+	function shadow(x, hover) {
+		if(hover == '1') {
+			document.getElementById('player'+x+'_shadow').style.display = 'block';
+		}
+		else if(hover == '0') {
+			document.getElementById('player'+x+'_shadow').style.display = 'none';
+		}
+	}
+
+	function supportsSVG() {
+		return !!document.createElementNS && !!document.createElementNS('http://www.w3.org/2000/svg', "svg").createSVGRect;
+	}
+
+	var newPitchWidth, newPitchHeight, newPitchWidthRatio, newPitchHeightRatio;
+
+	function setupEverything(x) {
+		if(x == 'onload') {
+			elementPlayer = {
+				'player0': document.getElementById('player0'),
+				'player1': document.getElementById('player1'),
+				'player2': document.getElementById('player2'),
+				'player3': document.getElementById('player3'),
+				'player4': document.getElementById('player4'),
+				'player5': document.getElementById('player5'),
+				'player6': document.getElementById('player6'),
+				'player7': document.getElementById('player7'),
+				'player8': document.getElementById('player8'),
+				'player9': document.getElementById('player9'),
+				'player10': document.getElementById('player10'),
+
+				'player11': document.getElementById('player11'),
+				'player12': document.getElementById('player12'),
+				'player13': document.getElementById('player13'),
+				'player14': document.getElementById('player14'),
+				'player15': document.getElementById('player15'),
+				'player16': document.getElementById('player16'),
+				'player17': document.getElementById('player17'),
+				'player18': document.getElementById('player18'),
+				'player19': document.getElementById('player19'),
+				'player20': document.getElementById('player20'),
+				'player21': document.getElementById('player21')
+			};
+		}
+
+		//set the goalie
+		var pitchWidth = document.getElementById('pitch').offsetWidth;
+		if(pitchWidth == 768) { // iPad in portrait mode
+			newPitchHeight = 928 - 56; // 56 is the height of the menu (so we need to offset it)
+		}
+		else {
+			newPitchHeight = pitchWidth / 0.762;
+			newPitchHeight = Math.round(newPitchHeight);
+		}
+
+		var keyboardmessageWidth = document.getElementById('keyboardmessage').offsetWidth;
+		var keyboardmessageLeft = (pitchWidth - keyboardmessageWidth) / 2;
+		document.getElementById('keyboardmessage').style.left = keyboardmessageLeft + 'px';
+		var keyboardmessageHeight = document.getElementById('keyboardmessage').offsetHeight;
+		var keyboardmessageTop = (pitchWidth - keyboardmessageHeight) / 2.5;
+		//var keyboardmessageTop = (screen.height - keyboardmessageHeight) / 4;
+		document.getElementById('keyboardmessage').style.top = keyboardmessageTop + 'px';
+
+		newPitchWidth = pitchWidth;
+		document.getElementById('pitch').style.height = newPitchHeight + 'px';
+		newPitchWidthRatio = 512 / newPitchWidth;
+		newPitchHeightRatio = 672 / newPitchHeight;
+		elementPlayer['player0'].style.top = Math.round(573 / newPitchHeightRatio) + 'px';
+		elementPlayer['player0'].style.left = Math.round(239 / newPitchWidthRatio) + 'px';
+		elementPlayer['player0'].style.visibility = 'visible';
+		elementPlayer['player11'].style.top = Math.round(46 / newPitchHeightRatio) + 'px';
+		elementPlayer['player11'].style.left = Math.round(239 / newPitchWidthRatio) + 'px';
+		coordinatesLandscape();
+
+		if(x == 'onresize') {
+			for(i = 1; i <= 21; i++) {
+				if(i != 11) {
+					if(elementPlayer['player'+i].style.display == 'block') {
+						elementPlayer['player'+i].style.top = Math.round(players['player'+i]['top'] / newPitchHeightRatio) + 'px';
+						elementPlayer['player'+i].style.left = Math.round(players['player'+i]['left'] / newPitchWidthRatio) + 'px';
+					}
+				}
+			}
+		}
+
+		if(pitchWidth <= 320) { //if the pitch is small, adjust the player marker sweet spot
+			off_centre = 9;
+		}
+		else if(pitchWidth <= 480) {
+			off_centre = 14;
+		}
+		else {
+			off_centre = 16;
+		}
+	}
+
+	function switchPanels(x) {
+		if(x == 'pitch') {
+			document.getElementById('teamdata').style.display = 'none';
+			document.getElementById('pitch').style.display = 'block';
+			document.getElementById('menu_pitch').style.display = 'none';
+			document.getElementById('menu_teamsheet').style.display = 'inline-block';
+		}
+		else if(x == 'sheet') {
+			//have_the_panels_been_switched = document.getElementById('pitch').offsetWidth;
+			document.getElementById('pitch').style.display = 'none';
+			document.getElementById('teamdata').style.display = 'block';
+			document.getElementById('menu_teamsheet').style.display = 'none';
+			document.getElementById('menu_pitch').style.display = 'inline-block';
+		}
+		setupEverything('onresize');
+	}
+
+
+
+		window.onresize = function() {
+			if(document.getElementById('container').offsetWidth > 928) {
+				document.getElementById('teamdata').style.display = 'block';
+				document.getElementById('pitch').style.display = 'block';
+				document.getElementById('menu_pitch').style.display = 'none';
+				document.getElementById('menu_teamsheet').style.display = 'none';
+			}
+			else {
+				document.getElementById('teamdata').style.display = 'none';
+				document.getElementById('pitch').style.display = 'block';
+				document.getElementById('menu_pitch').style.display = 'none';
+				document.getElementById('menu_teamsheet').style.display = 'inline-block';
+			}
+			setupEverything('onresize');
+		}
+
+
+	function showSearchBox() {
+		if(document.getElementById('search_box').style.display == 'block') {
+			document.getElementById('search_box').style.display = 'none';
+		}
+		else {
+						document.getElementById('search_box').style.display = 'block';
+			document.getElementById('q').focus();
+		}
+	}
+
+	function showShareBox() {
+		if(document.getElementById('share_box').style.display == 'block') {
+			document.getElementById('share_box').style.display = 'none';
+		}
+		else {
+			document.getElementById('search_box').style.display = 'none';
+			document.getElementById('share_box').style.display = 'block';
+		}
+	}
+
+	function trim(str) {
+		return str.replace(/^\s*|\s*$/g,""); // trim off spaces
+	}
+
+	function collectData() {
+		//alert(original_id);
+		for(var i = 0; i <= 21; i++) {
+			document.getElementById('form_player'+i+'_name').value = players['player'+i]['name'];
+			document.getElementById('form_player'+i+'_position').value = players['player'+i]['position'];
+			document.getElementById('form_player'+i+'_top').value = players['player'+i]['top'];
+			document.getElementById('form_player'+i+'_left').value = players['player'+i]['left'];
+			document.getElementById('form_player'+i+'_arrow').value = players['player'+i]['arrow'];
+			document.getElementById('form_player'+i+'_arrow2').value = players['player'+i]['arrow2'];
+		}
+
+		document.getElementById('form_formation_home').value = document.getElementById('formation_home').firstChild.nodeValue;
+		document.getElementById('form_formation_away').value = document.getElementById('formation_away').firstChild.nodeValue;
+
+		if(textboxDate.type == 'date' && date_input_problem == 0) { //if browser supports 'date' input
+			if(document.getElementById('date').value == '') {
+				document.getElementById('form_date').value = '';
+				document.getElementById('form_month').value = '';
+				document.getElementById('form_year').value = '';
+			}
+			else {
+				var dateSplit = document.getElementById('date').value.split('-');
+				document.getElementById('form_date').value = dateSplit['2'];
+				document.getElementById('form_month').value = dateSplit['1'];
+				document.getElementById('form_year').value = dateSplit['0'];
+			}
+		}
+		else {
+			document.getElementById('form_date').value = document.getElementById('date').value;
+			document.getElementById('form_month').value = document.getElementById('month').value;
+			document.getElementById('form_year').value = document.getElementById('year').value;
+		}
+
+		var check_teamname = document.getElementById('yourteam').value;
+
+		check_teamname = trim(check_teamname);
+
+		var error = '';
+
+
+
+		if(check_teamname == '' || check_teamname == 'Your team') {
+			error += 'Please name your team before submitting.';
+		}
+
+
+
+
+		if(error) {
+			alert(error);
+			if(can_they_submit == 1) {
+				if(document.getElementById('container').offsetWidth < 928) { //if users clicks 'submit' whilst viewing pitch
+					switchPanels('sheet'); //show teamsheet before the correct tab and textbox is selected below
+				}
+				boxData('home');
+				document.getElementById('yourteam').focus();
+			}
+		}
+		document.returnValue = (error == '');
+	}
+
+	var date_input_problem = 0;
+
+	var textboxDate = document.createElement('input');
+	textboxDate.setAttribute('type', 'date'); // only browsers that support 'date' will apply the date selector
+
+	var textboxRange = document.createElement('input');
+	textboxRange.setAttribute('type', 'range'); // only browsers that support 'range' will allow colour customisation
+
+	var can_they_submit = 1;
+
+	window.onload = function() {
+		if(!supportsSVG()) {
+			document.getElementById('pitch').style.backgroundImage="url('/images/pitch.png')";
+		}
+
+		if(supports_html5_storage()) {
+			html5_storage = 1;
+		}
+
+
+		setupEverything('onload');
+
+
+			if(textboxDate.type == 'date' && date_input_problem == 0) { //if browser supports 'date' input
+				date.parentNode.removeChild(date);
+				month.parentNode.removeChild(month);
+				year.parentNode.removeChild(year);
+				var newDateInput = document.createElement('input');
+				newDateInput.setAttribute('id','date');
+				newDateInput.setAttribute('name','date');
+				newDateInput.setAttribute('type','date');
+				newDateInput.setAttribute('min','1930-01-01');
+				newDateInput.setAttribute('max','2018-11-28');
+				newDateInput.setAttribute('onchange','updateTextbox(\'dateNew\');');
+				label_date.parentNode.insertBefore(newDateInput, label_date.nextSibling);
+			}
+
+			if(textboxRange.type == 'range') { //if browser supports 'range' input then display colour customisation options
+				document.getElementById('primary_colour_custom').style.display = 'block';
+				document.getElementById('primary_colour_label_custom').style.display = 'inline-block';
+				document.getElementById('secondary_colour_custom').style.display = 'block';
+				document.getElementById('secondary_colour_label_custom').style.display = 'inline-block';
+				document.getElementById('primary_colour2_custom').style.display = 'block';
+				document.getElementById('primary_colour2_label_custom').style.display = 'inline-block';
+				document.getElementById('secondary_colour2_custom').style.display = 'block';
+				document.getElementById('secondary_colour2_label_custom').style.display = 'inline-block';
+			}
+
+
+		//this stops webkit browsers displaying the text selection cursor whilst dragging
+		elementPlayer['player1'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player2'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player3'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player4'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player5'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player6'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player7'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player8'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player9'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player10'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+
+		elementPlayer['player12'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player13'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player14'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player15'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player16'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player17'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player18'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player19'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player20'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+		elementPlayer['player21'].addEventListener("mousedown", function(e) { e.preventDefault(); }, false);
+
+
+		if(html5_storage == 0) {
+			document.getElementById('primary_colour_7').checked = true;
+			document.getElementById('secondary_colour_3').checked = true;
+			document.getElementById('primary_colour2_2').checked = true;
+			document.getElementById('secondary_colour2_10').checked = true;
+		}
+
+		if(html5_storage == 1) {
+			if(localStorage['yourteam'] && localStorage['yourteam'] != '') {
+				document.getElementById('yourteam').value = localStorage['yourteam'];
+				document.getElementById('teamname').firstChild.nodeValue = localStorage['yourteam'];
+				document.getElementById('table_lineup_home_title').firstChild.nodeValue = localStorage['yourteam'];
+			}
+			if(localStorage['competition'] && localStorage['competition'] != '') {
+				document.getElementById('bodytag').style.backgroundColor = changeBGcolor(localStorage['competition']);
+				changePitchcolor(localStorage['competition']);
+				document.getElementById('competition').value = localStorage['competition'];
+			}
+						if(localStorage['date'] && localStorage['date'] != '') {
+				if(textboxDate.type == 'date' && date_input_problem == 0) { //if browser supports 'date' input
+					document.getElementById('date').value = localStorage['date'];
+				}
+				else {
+					var dateSplit = localStorage['date'].split('-');
+					document.getElementById('year').value = dateSplit['0'];
+					document.getElementById('month').value = dateSplit['1'];
+					document.getElementById('date').value = dateSplit['2'];
+				}
+			}
+			if(localStorage['primarycolour'] && localStorage['primarycolour'] != '') {
+				swos_primarycolour = localStorage['primarycolour'];
+				document.getElementById('teamcolour').style.backgroundColor = localStorage['primarycolour'];
+				for(var i = 1; i <= 10; i++) {
+					document.getElementById('player'+i+'_kit').style.backgroundColor = localStorage['primarycolour'];
+				}
+				document.getElementById(localStorage['primarycolour_id']).checked = true;
+				if(localStorage['primarycolour_id'] == 'primary_colour_custom') {
+					document.getElementById('primary_colour_custom').value = localStorage['primarycolour'];
+					document.getElementById('primary_colour_label_custom').style.backgroundColor = localStorage['primarycolour'];
+				}
+			}
+			else {
+				document.getElementById('primary_colour_7').checked = true;
+			}
+			if(localStorage['secondarycolour'] && localStorage['secondarycolour'] != '') {
+				swos_secondarycolour = localStorage['secondarycolour'];
+				document.getElementById('teamname').style.color = localStorage['secondarycolour'];
+				for(var i = 0; i <= 10; i++) {
+					document.getElementById('player'+i+'_kit').style.borderColor = localStorage['secondarycolour'];
+				}
+				document.getElementById(localStorage['secondarycolour_id']).checked = true;
+				if(localStorage['secondarycolour_id'] == 'secondary_colour_custom') {
+					document.getElementById('secondary_colour_custom').value = localStorage['secondarycolour'];
+					document.getElementById('secondary_colour_label_custom').style.backgroundColor = localStorage['secondarycolour'];
+				}
+			}
+			else {
+				document.getElementById('secondary_colour_3').checked = true;
+			}
+			swos_primarycolour = swos_primarycolour.replace('#','');
+			swos_secondarycolour = swos_secondarycolour.replace('#','');
+			document.getElementById('player0_swos').style.backgroundImage = "url('/images/swos.svg?primary=398d13&secondary="+swos_secondarycolour+"')";
+			for(var i = 1; i <= 10; i++) {
+				document.getElementById('player'+i+'_swos').style.backgroundImage = "url('/images/swos.svg?primary="+swos_primarycolour+"&secondary="+swos_secondarycolour+"')";
+			}
+			if(localStorage['player0_name'] && localStorage['player0_name'] != '') { //goalie name
+				document.getElementById('player0').setAttribute('data-playername', localStorage['player0_name']);
+				players['player0']['name'] = localStorage['player0_name'];
+				var td_player = document.getElementById('td_player0');
+				var tempNodes = td_player.childNodes;
+				for(var n = 0; n < tempNodes.length; n++) {
+					td_player.removeChild(tempNodes[n]);
+				}
+				td_player.appendChild(document.createTextNode(localStorage['player0_name']));
+			}
+			var end = 10;
+			if(localStorage['theirteam'] && localStorage['theirteam'] != '') {
+				var end = 21;
+			}
+			for(var i = 1; i <= end; i++) { //outfield players
+				if(i != 11) {
+					if(localStorage['player' + i + '_left'] && localStorage['player' + i + '_left'] != '' && localStorage['player' + i + '_top'] && localStorage['player' + i + '_top'] != '') {
+						//local storage stores every variable as a string, so we need to revert it back to an integer
+						localStorage['player' + i + '_left'] = parseInt(localStorage['player' + i + '_left']);
+						localStorage['player' + i + '_top'] = parseInt(localStorage['player' + i + '_top']);
+						point_it(null, Math.round(localStorage['player' + i + '_left'] / newPitchWidthRatio), Math.round(localStorage['player' + i + '_top'] / newPitchHeightRatio));
+
+						if(localStorage['player' + i + '_arrow2'] && localStorage['player' + i + '_arrow2'] != '') {
+							//local storage stores every variable as a string, so we need to revert it back to an integer
+							localStorage['player' + i + '_arrow2'] = parseInt(localStorage['player' + i + '_arrow2']);
+							if(localStorage['player' + i + '_arrow2'] >= 0) {
+								players['player' + i]['arrow2'] = localStorage['player' + i + '_arrow2'];
+								displayPlayerArrows2('player' + i);
+							}
+						}
+
+						if(localStorage['player' + i + '_arrow'] && localStorage['player' + i + '_arrow'] != '') {
+							//local storage stores every variable as a string, so we need to revert it back to an integer
+							localStorage['player' + i + '_arrow'] = parseInt(localStorage['player' + i + '_arrow']);
+							if(localStorage['player' + i + '_arrow'] >= 0) {
+								players['player' + i]['arrow'] = localStorage['player' + i + '_arrow'];
+								displayPlayerArrows('player' + i);
+							}
+						}
+
+						if(localStorage['player' + i + '_name'] && localStorage['player' + i + '_name'] != '') {
+							document.getElementById('player'+i).setAttribute('data-playername', localStorage['player' + i + '_name']);
+							players['player'+i]['name'] = localStorage['player' + i + '_name'];
+							var td_player = document.getElementById('td_player'+i);
+							var tempNodes = td_player.childNodes;
+							for(var n = 0; n < tempNodes.length; n++) {
+								td_player.removeChild(tempNodes[n]);
+							}
+							td_player.appendChild(document.createTextNode(localStorage['player' + i + '_name']));
+						}
+					}
+				}
+				else if(i == 11) {
+					enable_opposition();
+					if(localStorage['player11_name'] && localStorage['player11_name'] != '') { //goalie name
+						document.getElementById('player11').setAttribute('data-playername', localStorage['player11_name']);
+						players['player11']['name'] = localStorage['player11_name'];
+						var td_player = document.getElementById('td_player11');
+						var tempNodes = td_player.childNodes;
+						for(var n = 0; n < tempNodes.length; n++) {
+							td_player.removeChild(tempNodes[n]);
+						}
+						td_player.appendChild(document.createTextNode(localStorage['player11_name']));
+					}
+					if(localStorage['theirteam'] && localStorage['theirteam'] != '') {
+						document.getElementById('theirteam').value = localStorage['theirteam'];
+						document.getElementById('teamname2').firstChild.nodeValue = localStorage['theirteam'];
+						document.getElementById('table_lineup_away_title').firstChild.nodeValue = localStorage['theirteam'];
+					}
+					if(localStorage['primarycolour2'] && localStorage['primarycolour2'] != '') {
+						swos_primarycolour2 = localStorage['primarycolour2'];
+						document.getElementById('teamcolour2').style.backgroundColor = localStorage['primarycolour2'];
+						for(var j = 12; j <= 21; j++) {
+							document.getElementById('player'+j+'_kit').style.backgroundColor = localStorage['primarycolour2'];
+						}
+						document.getElementById(localStorage['primarycolour2_id']).checked = true;
+						if(localStorage['primarycolour2_id'] == 'primary_colour2_custom') {
+							document.getElementById('primary_colour2_custom').value = localStorage['primarycolour2'];
+							document.getElementById('primary_colour2_label_custom').style.backgroundColor = localStorage['primarycolour2'];
+						}
+					}
+					else {
+						document.getElementById('primary_colour2_2').checked = true;
+					}
+					if(localStorage['secondarycolour2'] && localStorage['secondarycolour2'] != '') {
+						swos_secondarycolour2 = localStorage['secondarycolour2'];
+						document.getElementById('teamname2').style.color = localStorage['secondarycolour2'];
+						for(var j = 11; j <= 21; j++) {
+							document.getElementById('player'+j+'_kit').style.borderColor = localStorage['secondarycolour2'];
+						}
+						document.getElementById(localStorage['secondarycolour2_id']).checked = true;
+						if(localStorage['secondarycolour2_id'] == 'secondary_colour2_custom') {
+							document.getElementById('secondary_colour2_custom').value = localStorage['secondarycolour2'];
+							document.getElementById('secondary_colour2_label_custom').style.backgroundColor = localStorage['secondarycolour2'];
+						}
+					}
+					else {
+						document.getElementById('secondary_colour2_10').checked = true;
+					}
+					swos_primarycolour2 = swos_primarycolour2.replace('#','');
+					swos_secondarycolour2 = swos_secondarycolour2.replace('#','');
+					document.getElementById('player11_swos').style.backgroundImage = "url('/images/swos.svg?primary=398d13&secondary="+swos_secondarycolour2+"')";
+					for(var j = 12; j <= 21; j++) {
+						document.getElementById('player'+j+'_swos').style.backgroundImage = "url('/images/swos.svg?primary="+swos_primarycolour2+"&secondary="+swos_secondarycolour2+"')";
+					}
+				}
+			}
+		}
+
+			}
+</script>
+
+	<script async src="http://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+	<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-43796821-1', 'sharemytactics.com');
+  ga('send', 'pageview');
+
+</script>
+</head>
+<body id="bodytag">
+<div id="container">
+
+
+			<div onclick="customColourCancel();" id="overlay"></div>
+	<div id="colourpicker" class="popup">
+		<h2 id="colourpickertitle">Create a colour:</h2>
+		<form action="" method="post" role="form" aria-labelledby="colourpickertitle">
+		<fieldset>
+			<ol>
+				<li>
+					<label for="picker_red">Red:</label>
+					<input onchange="customColourChange();" type="range" id="picker_red" name="picker_red" value="0" min="0" max="255" step="1" />
+					<div id="picker_red_value">&nbsp;</div>
+				</li>
+				<li>
+					<label for="picker_green">Green:</label>
+					<input onchange="customColourChange();" type="range" id="picker_green" name="picker_green" value="0" min="0" max="255" step="1" />
+					<div id="picker_green_value">&nbsp;</div>
+				</li>
+				<li>
+					<label for="picker_blue">Blue:</label>
+					<input onchange="customColourChange();" type="range" id="picker_blue" name="picker_blue" value="0" min="0" max="255" step="1" />
+					<div id="picker_blue_value">&nbsp;</div>
+				</li>
+			</ol>
+		</fieldset>
+		<div id="picker_mix"></div>
+		<input type="hidden" id="picker_hidden" name="picker_hidden" value="#000000" />
+		</form>
+		<input onclick="customColourSubmit();return false;" type="submit" id="colour-picker-submit" class="button button-submit" name="colour-picker-submit" value="Apply" />
+		<span class="submit-extra-buttons">or <a href="#" onclick="customColourCancel();return false;" class="cancel" role="button">Cancel</a></span>
+	</div>
+				<header id="header">
+									<!-- sharemytactics_link_ads -->
+					<!-- <ins class="adsbygoogle"
+						 style="display:inline-block;width:728px;height:15px"
+						 data-ad-client="ca-pub-9183743094539762"
+						 data-ad-slot="3874436627"></ins>
+					<script>
+					(adsbygoogle = window.adsbygoogle || []).push({});
+					</script> -->
+								</header>
+					<div id="details">
+		<aside id="search_box" style="display:none;" role="complementary">
+			<h4 id="search_title" class="offscreen">Search for tactics</h4>
+			<form action="http://sharemytactics.com/search" accept-charset="utf-8" role="search" method="get" aria-labelledby="search_title">				<fieldset>
+					<label class="offscreen">Input search term:</label>
+					<input class="textbox" id="q" name="q" maxlength="50" type="search" required="required" aria-required="true" placeholder="Melchester Rovers" />
+					<input type="submit" id="search" class="button button-submit" name="search" value="Go" />
+				</fieldset>
+			</form>
+		</aside>
+		<form action="http://sharemytactics.com/stage/submit_tactics" method="post" accept-charset="utf-8" role="form" onsubmit="collectData();return document.returnValue;"><div style="display:none">
+		<input type="hidden" name="csrf_test_name" value="7a6787b598c4cf3397c75554f06485db" />
+</div>			<nav role="navigation">
+				<h4 class="offscreen">Submit lineup, start again or search for other tactics</h4>
+				<ul id="menu"><li id="menu_search"><a class="menu_icon" href="#" onclick="showSearchBox();return false;"><img src="/images/icon_search.svg" width="24" height="24" alt="" /></a></li>
+          <li id="menu_pitch"><a class="menu_icon" href="#" onclick="switchPanels('pitch'); return false;"><img src="/images/icon_pitch.svg" width="24" height="24" alt="Show Pitch" /></a></li>
+          <li id="menu_teamsheet"><a class="menu_icon" href="#" onclick="switchPanels('sheet'); return false;"><img src="/images/icon_sheet.svg" width="24" height="24" alt="Show Info" /></a></li>
+
+
+					<!--changed input type below from submit to hidden -->
+				  <li id="menu_submit"><input type="hidden" id="form-submit" class="button button-submit" name="submit" value="Submit" /></li>
+
+					<li id="menu_clear"><a href="#" class="button button-text" onclick="startAgain();return false;" role="button">Clear</a></li>
+          <li id="enable_opposition"><a href="#" class="button button-text button-highlight" onclick="enable_opposition();return false;">Add Opposition</a></li>
+        </ul>
+			</nav>
+						<div id="teamdata" role="main">
+				<h1 id="teamcolour2"><div class="colourfull" id="teamcolour"><div class="namefull" id="teamname">Your team</div><div style="display:none;" id="teamname2">Away team</div></div></h1>
+													<aside id="ad_small" role="complementary" aria-hidden="true">
+
+							<h4 class="offscreen">Advert</h4>
+							<style>
+							.sharemytactics-responsive { width: 468px; height: 60px; }
+														</style>
+							<ins class="adsbygoogle sharemytactics-responsive"
+								 style="display:inline-block"
+								 data-ad-client="ca-pub-9183743094539762"
+								 data-ad-slot="3840865427"></ins>
+							<script>
+							(adsbygoogle = window.adsbygoogle || []).push({});
+							</script>
+
+																		</aside>
+									<nav class="boxlinkscontainer">
+					<h4 class="offscreen">Edit team and players</h4>
+					<ul class="boxlinks"><li><a id="boxlink_lineup" tabindex="-1" class="selected" href="#" onclick="boxData('lineup');return false;"><span id="tab_lineup">Lineup</span></a></li><li><a id="boxlink_info" href="#" onclick="boxData('info');return false;">Info</a></li>
+            <li id="tab_li_home"><a id="boxlink_home" href="#" onclick="boxData('home');return false;"><span id="tab_home">Team</span></a></li>
+            <li id="tab_li_away" style="display:none;"><a id="boxlink_away" href="#" onclick="boxData('away');return false;">Away</a></li>
+          </ul>
+				</nav>
+				<main class="boxdata">
+
+					<div id="boxdata_lineup">
+						<h2 id="header_lineup" tabindex="-1">Lineup</h2>
+						<div id="lineup_table">
+							<div id="lineup_table_home" class="lineup_table_full">
+																<h3 id="table_lineup_home_title">Your team</h3>
+								<table id="table_lineup_home" width="100%" class="lineup" summary="Home team lineup">
+									<colgroup>
+										<col width="65%" />
+										<col />
+									</colgroup>
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Position</th>
+										</tr>
+									</thead>
+									<tbody id="lineup_tbody_home">
+										<tr class="odd">
+											<td id="td_player0" class="lineup_edit" tabindex="0" onclick="editPlayerName('0');" onmouseover="shadow('0', '1');" onmouseout="shadow('0', '0');">Goalie</td>
+											<td id="td_position0">GK</td>
+										</tr>
+										<tr>
+											<td id="td_player1">&nbsp;</td>
+											<td id="td_position1"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player2">&nbsp;</td>
+											<td id="td_position2"></td>
+										</tr>
+										<tr>
+											<td id="td_player3">&nbsp;</td>
+											<td id="td_position3"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player4">&nbsp;</td>
+											<td id="td_position4"></td>
+										</tr>
+										<tr>
+											<td id="td_player5">&nbsp;</td>
+											<td id="td_position5"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player6">&nbsp;</td>
+											<td id="td_position6"></td>
+										</tr>
+										<tr>
+											<td id="td_player7">&nbsp;</td>
+											<td id="td_position7"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player8">&nbsp;</td>
+											<td id="td_position8"></td>
+										</tr>
+										<tr>
+											<td id="td_player9">&nbsp;</td>
+											<td id="td_position9"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player10">&nbsp;</td>
+											<td id="td_position10"></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<div id="lineup_table_away" class="lineup_table_half" style="display:none;">
+								<h3 id="table_lineup_away_title">Away team</h3>
+								<table id="table_lineup_away" width="100%" class="lineup" summary="Away team lineup">
+									<colgroup>
+										<col width="65%" />
+										<col />
+									</colgroup>
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Position</th>
+										</tr>
+									</thead>
+									<tbody id="lineup_tbody_away">
+										<tr class="odd">
+											<td id="td_player11" class="lineup_edit" tabindex="0" onclick="editPlayerName('11');" onmouseover="shadow('11', '1');" onmouseout="shadow('11', '0');">Goalie</td>
+											<td id="td_position11">GK</td>
+										</tr>
+										<tr>
+											<td id="td_player12">&nbsp;</td>
+											<td id="td_position12"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player13">&nbsp;</td>
+											<td id="td_position13"></td>
+										</tr>
+										<tr>
+											<td id="td_player14">&nbsp;</td>
+											<td id="td_position14"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player15">&nbsp;</td>
+											<td id="td_position15"></td>
+										</tr>
+										<tr>
+											<td id="td_player16">&nbsp;</td>
+											<td id="td_position16"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player17">&nbsp;</td>
+											<td id="td_position17"></td>
+										</tr>
+										<tr>
+											<td id="td_player18">&nbsp;</td>
+											<td id="td_position18"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player19">&nbsp;</td>
+											<td id="td_position19"></td>
+										</tr>
+										<tr>
+											<td id="td_player20">&nbsp;</td>
+											<td id="td_position20"></td>
+										</tr>
+										<tr class="odd">
+											<td id="td_player21">&nbsp;</td>
+											<td id="td_position21"></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div style="display:none;" id="boxdata_info">
+						<h2 id="header_info" tabindex="-1">Info</h2>
+						<fieldset>
+							<ol>
+								<li>
+									<datalist id="competition_list">
+										<option value="Champions League">Champions League</option>
+										<option value="Europa League">Europa League</option>
+									</datalist>
+									<label for="competition">Competition: <i>(Optional)</i></label>
+									<input list="competition_list" autocomplete="off" onchange="updateTextbox('competition');" onkeyup="updateTextbox('competition');" class="textbox" type="text" id="competition" name="competition" placeholder="World Cup" />
+								</li>
+								<li class="invisible" aria-hidden="true">
+									<label for="hf53bdh9e7j">Only fill this textbox in if you&#8217;re a spammer</label>
+									<input type="text" id="hf53bdh9e7j" name="hf53bdh9e7j" tabindex="-1" autocomplete="off" />
+								</li>
+								<li>
+									<label for="date" id="label_date">Date of game: <i>(Optional)</i></label>
+									<select onchange="updateTextbox('date');" name="date" id="date">
+										<option value=""></option>
+																					<option value="01">01</option>
+																						<option value="02">02</option>
+																						<option value="03">03</option>
+																						<option value="04">04</option>
+																						<option value="05">05</option>
+																						<option value="06">06</option>
+																						<option value="07">07</option>
+																						<option value="08">08</option>
+																						<option value="09">09</option>
+																						<option value="10">10</option>
+																						<option value="11">11</option>
+																						<option value="12">12</option>
+																						<option value="13">13</option>
+																						<option value="14">14</option>
+																						<option value="15">15</option>
+																						<option value="16">16</option>
+																						<option value="17">17</option>
+																						<option value="18">18</option>
+																						<option value="19">19</option>
+																						<option value="20">20</option>
+																						<option value="21">21</option>
+																						<option value="22">22</option>
+																						<option value="23">23</option>
+																						<option value="24">24</option>
+																						<option value="25">25</option>
+																						<option value="26">26</option>
+																						<option value="27">27</option>
+																						<option value="28">28</option>
+																						<option value="29">29</option>
+																						<option value="30">30</option>
+																						<option value="31">31</option>
+																				</select>
+									<select onchange="updateTextbox('date');" name="month" id="month">
+										<option value=""></option>
+										<option value="01">January</option>
+										<option value="02">February</option>
+										<option value="03">March</option>
+										<option value="04">April</option>
+										<option value="05">May</option>
+										<option value="06">June</option>
+										<option value="07">July</option>
+										<option value="08">August</option>
+										<option value="09">September</option>
+										<option value="10">October</option>
+										<option value="11">November</option>
+										<option value="12">December</option>
+									</select>
+									<select onchange="updateTextbox('date');" name="year" id="year">
+										<option value=""></option>
+																					<option value="2017">2017</option>
+																						<option value="2016">2016</option>
+																						<option value="2015">2015</option>
+																						<option value="2014">2014</option>
+																						<option value="2013">2013</option>
+																						<option value="2012">2012</option>
+																						<option value="2011">2011</option>
+																						<option value="2010">2010</option>
+																						<option value="2009">2009</option>
+																						<option value="2008">2008</option>
+																						<option value="2007">2007</option>
+																						<option value="2006">2006</option>
+																						<option value="2005">2005</option>
+																						<option value="2004">2004</option>
+																						<option value="2003">2003</option>
+																						<option value="2002">2002</option>
+																						<option value="2001">2001</option>
+																						<option value="2000">2000</option>
+																						<option value="1999">1999</option>
+																						<option value="1998">1998</option>
+																						<option value="1997">1997</option>
+																						<option value="1996">1996</option>
+																						<option value="1995">1995</option>
+																						<option value="1994">1994</option>
+																						<option value="1993">1993</option>
+																						<option value="1992">1992</option>
+																						<option value="1991">1991</option>
+																						<option value="1990">1990</option>
+																						<option value="1989">1989</option>
+																						<option value="1988">1988</option>
+																						<option value="1987">1987</option>
+																						<option value="1986">1986</option>
+																						<option value="1985">1985</option>
+																						<option value="1984">1984</option>
+																						<option value="1983">1983</option>
+																						<option value="1982">1982</option>
+																						<option value="1981">1981</option>
+																						<option value="1980">1980</option>
+																						<option value="1979">1979</option>
+																						<option value="1978">1978</option>
+																						<option value="1977">1977</option>
+																						<option value="1976">1976</option>
+																						<option value="1975">1975</option>
+																						<option value="1974">1974</option>
+																						<option value="1973">1973</option>
+																						<option value="1972">1972</option>
+																						<option value="1971">1971</option>
+																						<option value="1970">1970</option>
+																						<option value="1969">1969</option>
+																						<option value="1968">1968</option>
+																						<option value="1967">1967</option>
+																						<option value="1966">1966</option>
+																						<option value="1965">1965</option>
+																						<option value="1964">1964</option>
+																						<option value="1963">1963</option>
+																						<option value="1962">1962</option>
+																						<option value="1961">1961</option>
+																						<option value="1960">1960</option>
+																						<option value="1959">1959</option>
+																						<option value="1958">1958</option>
+																						<option value="1957">1957</option>
+																						<option value="1956">1956</option>
+																						<option value="1955">1955</option>
+																						<option value="1954">1954</option>
+																						<option value="1953">1953</option>
+																						<option value="1952">1952</option>
+																						<option value="1951">1951</option>
+																						<option value="1950">1950</option>
+																						<option value="1949">1949</option>
+																						<option value="1948">1948</option>
+																						<option value="1947">1947</option>
+																						<option value="1946">1946</option>
+																						<option value="1945">1945</option>
+																						<option value="1944">1944</option>
+																						<option value="1943">1943</option>
+																						<option value="1942">1942</option>
+																						<option value="1941">1941</option>
+																						<option value="1940">1940</option>
+																						<option value="1939">1939</option>
+																						<option value="1938">1938</option>
+																						<option value="1937">1937</option>
+																						<option value="1936">1936</option>
+																						<option value="1935">1935</option>
+																						<option value="1934">1934</option>
+																						<option value="1933">1933</option>
+																						<option value="1932">1932</option>
+																						<option value="1931">1931</option>
+																						<option value="1930">1930</option>
+																				</select>
+								</li>
+								<li>
+									<label for="notes">Explain your tactics: <i>(Optional)</i></label>
+									<textarea onchange="updateTextbox('notes');" onkeyup="updateTextbox('notes');" id="notes" name="notes"></textarea>
+								</li>
+							</ol>
+						</fieldset>
+					</div>
+					<div style="display:none;" id="boxdata_home">
+						<h2 id="header_home" tabindex="-1">Team</h2>
+						<fieldset>
+							<ol>
+								<li>
+									<label for="yourteam">Team name:</label>
+									<input onchange="updateTextbox('yourteam');" onkeyup="updateTextbox('yourteam');" class="textbox" type="text" id="yourteam" name="yourteam" value="Your team" required="required" aria-required="true" />
+								</li>
+								<li>
+									<fieldset class="colour-list">
+										<legend>Primary kit colour:</legend>
+																							<input onchange="changeColour('primary', '#000000', 'primary_colour_0');" type="radio" id="primary_colour_0" name="primary_colour" value="#000000" />
+												<label onclick="changeColour('primary', '#000000', 'primary_colour_0');" style="background-color:#000000;" id="primary_colour_label_0" for="primary_colour_0"><span>Black</span></label>
+																								<input onchange="changeColour('primary', '#959BA1', 'primary_colour_1');" type="radio" id="primary_colour_1" name="primary_colour" value="#959BA1" />
+												<label onclick="changeColour('primary', '#959BA1', 'primary_colour_1');" style="background-color:#959BA1;" id="primary_colour_label_1" for="primary_colour_1"><span>Grey</span></label>
+																								<input onchange="changeColour('primary', '#FFFFFF', 'primary_colour_2');" type="radio" id="primary_colour_2" name="primary_colour" value="#FFFFFF" />
+												<label onclick="changeColour('primary', '#FFFFFF', 'primary_colour_2');" style="background-color:#FFFFFF;" id="primary_colour_label_2" for="primary_colour_2"><span>White</span></label>
+																								<input onchange="changeColour('primary', '#F8F837', 'primary_colour_3');" type="radio" id="primary_colour_3" name="primary_colour" value="#F8F837" />
+												<label onclick="changeColour('primary', '#F8F837', 'primary_colour_3');" style="background-color:#F8F837;" id="primary_colour_label_3" for="primary_colour_3"><span>Yellow</span></label>
+																								<input onchange="changeColour('primary', '#F58220', 'primary_colour_4');" type="radio" id="primary_colour_4" name="primary_colour" value="#F58220" />
+												<label onclick="changeColour('primary', '#F58220', 'primary_colour_4');" style="background-color:#F58220;" id="primary_colour_label_4" for="primary_colour_4"><span>Orange</span></label>
+																								<input onchange="changeColour('primary', '#811E2D', 'primary_colour_5');" type="radio" id="primary_colour_5" name="primary_colour" value="#811E2D" />
+												<label onclick="changeColour('primary', '#811E2D', 'primary_colour_5');" style="background-color:#811E2D;" id="primary_colour_label_5" for="primary_colour_5"><span>Maroon</span></label>
+																								<input onchange="changeColour('primary', '#F00000', 'primary_colour_6');" type="radio" id="primary_colour_6" name="primary_colour" value="#F00000" />
+												<label onclick="changeColour('primary', '#F00000', 'primary_colour_6');" style="background-color:#F00000;" id="primary_colour_label_6" for="primary_colour_6"><span>Red</span></label>
+																								<input onchange="changeColour('primary', '#C8232A', 'primary_colour_7');" type="radio" id="primary_colour_7" name="primary_colour" value="#C8232A" />
+												<label onclick="changeColour('primary', '#C8232A', 'primary_colour_7');" style="background-color:#C8232A;" id="primary_colour_label_7" for="primary_colour_7"><span>Light Red</span></label>
+																								<input onchange="changeColour('primary', '#00A650', 'primary_colour_8');" type="radio" id="primary_colour_8" name="primary_colour" value="#00A650" />
+												<label onclick="changeColour('primary', '#00A650', 'primary_colour_8');" style="background-color:#00A650;" id="primary_colour_label_8" for="primary_colour_8"><span>Green</span></label>
+																								<input onchange="changeColour('primary', '#0C4CA3', 'primary_colour_9');" type="radio" id="primary_colour_9" name="primary_colour" value="#0C4CA3" />
+												<label onclick="changeColour('primary', '#0C4CA3', 'primary_colour_9');" style="background-color:#0C4CA3;" id="primary_colour_label_9" for="primary_colour_9"><span>Blue</span></label>
+																								<input onchange="changeColour('primary', '#1C1B2D', 'primary_colour_10');" type="radio" id="primary_colour_10" name="primary_colour" value="#1C1B2D" />
+												<label onclick="changeColour('primary', '#1C1B2D', 'primary_colour_10');" style="background-color:#1C1B2D;" id="primary_colour_label_10" for="primary_colour_10"><span>Dark Blue</span></label>
+																								<input onchange="changeColour('primary', '#8BB4EA', 'primary_colour_11');" type="radio" id="primary_colour_11" name="primary_colour" value="#8BB4EA" />
+												<label onclick="changeColour('primary', '#8BB4EA', 'primary_colour_11');" style="background-color:#8BB4EA;" id="primary_colour_label_11" for="primary_colour_11"><span>Light Blue</span></label>
+																								<input onchange="changeColour('primary', '#A99863', 'primary_colour_12');" type="radio" id="primary_colour_12" name="primary_colour" value="#A99863" />
+												<label onclick="changeColour('primary', '#A99863', 'primary_colour_12');" style="background-color:#A99863;" id="primary_colour_label_12" for="primary_colour_12"><span>Gold</span></label>
+																							<input style="display:none;" type="radio" id="primary_colour_custom" name="primary_colour" value="#000000" />
+											<label onclick="customColour('primary', 'primary_colour_custom', 'primary_colour_label_custom');customColourChange();" style="background-color:#000000;display:none;" id="primary_colour_label_custom" for="primary_colour_custom"><span>Custom Colour</span></label>
+									</fieldset>
+								</li>
+								<li>
+									<fieldset class="colour-list">
+										<legend>Secondary kit colour:</legend>
+																							<input onchange="changeColour('secondary', '#000000', 'secondary_colour_0');" type="radio" id="secondary_colour_0" name="secondary_colour" value="#000000" />
+												<label onclick="changeColour('secondary', '#000000', 'secondary_colour_0');" style="background-color:#000000;" id="secondary_colour_label_0" for="secondary_colour_0"><span>Black</span></label>
+																								<input onchange="changeColour('secondary', '#959BA1', 'secondary_colour_1');" type="radio" id="secondary_colour_1" name="secondary_colour" value="#959BA1" />
+												<label onclick="changeColour('secondary', '#959BA1', 'secondary_colour_1');" style="background-color:#959BA1;" id="secondary_colour_label_1" for="secondary_colour_1"><span>Grey</span></label>
+																								<input onchange="changeColour('secondary', '#FFFFFF', 'secondary_colour_2');" type="radio" id="secondary_colour_2" name="secondary_colour" value="#FFFFFF" />
+												<label onclick="changeColour('secondary', '#FFFFFF', 'secondary_colour_2');" style="background-color:#FFFFFF;" id="secondary_colour_label_2" for="secondary_colour_2"><span>White</span></label>
+																								<input onchange="changeColour('secondary', '#F8F837', 'secondary_colour_3');" type="radio" id="secondary_colour_3" name="secondary_colour" value="#F8F837" />
+												<label onclick="changeColour('secondary', '#F8F837', 'secondary_colour_3');" style="background-color:#F8F837;" id="secondary_colour_label_3" for="secondary_colour_3"><span>Yellow</span></label>
+																								<input onchange="changeColour('secondary', '#F58220', 'secondary_colour_4');" type="radio" id="secondary_colour_4" name="secondary_colour" value="#F58220" />
+												<label onclick="changeColour('secondary', '#F58220', 'secondary_colour_4');" style="background-color:#F58220;" id="secondary_colour_label_4" for="secondary_colour_4"><span>Orange</span></label>
+																								<input onchange="changeColour('secondary', '#811E2D', 'secondary_colour_5');" type="radio" id="secondary_colour_5" name="secondary_colour" value="#811E2D" />
+												<label onclick="changeColour('secondary', '#811E2D', 'secondary_colour_5');" style="background-color:#811E2D;" id="secondary_colour_label_5" for="secondary_colour_5"><span>Maroon</span></label>
+																								<input onchange="changeColour('secondary', '#F00000', 'secondary_colour_6');" type="radio" id="secondary_colour_6" name="secondary_colour" value="#F00000" />
+												<label onclick="changeColour('secondary', '#F00000', 'secondary_colour_6');" style="background-color:#F00000;" id="secondary_colour_label_6" for="secondary_colour_6"><span>Red</span></label>
+																								<input onchange="changeColour('secondary', '#C8232A', 'secondary_colour_7');" type="radio" id="secondary_colour_7" name="secondary_colour" value="#C8232A" />
+												<label onclick="changeColour('secondary', '#C8232A', 'secondary_colour_7');" style="background-color:#C8232A;" id="secondary_colour_label_7" for="secondary_colour_7"><span>Light Red</span></label>
+																								<input onchange="changeColour('secondary', '#00A650', 'secondary_colour_8');" type="radio" id="secondary_colour_8" name="secondary_colour" value="#00A650" />
+												<label onclick="changeColour('secondary', '#00A650', 'secondary_colour_8');" style="background-color:#00A650;" id="secondary_colour_label_8" for="secondary_colour_8"><span>Green</span></label>
+																								<input onchange="changeColour('secondary', '#0C4CA3', 'secondary_colour_9');" type="radio" id="secondary_colour_9" name="secondary_colour" value="#0C4CA3" />
+												<label onclick="changeColour('secondary', '#0C4CA3', 'secondary_colour_9');" style="background-color:#0C4CA3;" id="secondary_colour_label_9" for="secondary_colour_9"><span>Blue</span></label>
+																								<input onchange="changeColour('secondary', '#1C1B2D', 'secondary_colour_10');" type="radio" id="secondary_colour_10" name="secondary_colour" value="#1C1B2D" />
+												<label onclick="changeColour('secondary', '#1C1B2D', 'secondary_colour_10');" style="background-color:#1C1B2D;" id="secondary_colour_label_10" for="secondary_colour_10"><span>Dark Blue</span></label>
+																								<input onchange="changeColour('secondary', '#8BB4EA', 'secondary_colour_11');" type="radio" id="secondary_colour_11" name="secondary_colour" value="#8BB4EA" />
+												<label onclick="changeColour('secondary', '#8BB4EA', 'secondary_colour_11');" style="background-color:#8BB4EA;" id="secondary_colour_label_11" for="secondary_colour_11"><span>Light Blue</span></label>
+																								<input onchange="changeColour('secondary', '#A99863', 'secondary_colour_12');" type="radio" id="secondary_colour_12" name="secondary_colour" value="#A99863" />
+												<label onclick="changeColour('secondary', '#A99863', 'secondary_colour_12');" style="background-color:#A99863;" id="secondary_colour_label_12" for="secondary_colour_12"><span>Gold</span></label>
+																							<input style="display:none;" type="radio" id="secondary_colour_custom" name="secondary_colour" value="#000000" />
+											<label onclick="customColour('secondary', 'secondary_colour_custom', 'secondary_colour_label_custom');customColourChange();" style="background-color:#000000;display:none;" id="secondary_colour_label_custom" for="secondary_colour_custom"><span>Custom Colour</span></label>
+									</fieldset>
+								</li>
+							</ol>
+						</fieldset>
+					</div>
+					<div style="display:none;" id="boxdata_away">
+						<h2 id="header_away" tabindex="-1">Away Team</h2>
+						<fieldset>
+							<ol>
+								<li>
+									<label for="theirteam">Team name:</label>
+									<input onchange="updateTextbox('theirteam');" onkeyup="updateTextbox('theirteam');" class="textbox" type="text" id="theirteam" name="theirteam" value="" />
+								</li>
+								<li>
+									<fieldset class="colour-list">
+										<legend>Primary kit colour:</legend>
+																							<input onchange="changeColour('primary2', '#000000', 'primary_colour2_0');" type="radio" id="primary_colour2_0" name="primary_colour2" value="#000000" />
+												<label onclick="changeColour('primary2', '#000000', 'primary_colour2_0');" style="background-color:#000000;" id="primary_colour2_label_0" for="primary_colour2_0"><span>Black</span></label>
+																								<input onchange="changeColour('primary2', '#959BA1', 'primary_colour2_1');" type="radio" id="primary_colour2_1" name="primary_colour2" value="#959BA1" />
+												<label onclick="changeColour('primary2', '#959BA1', 'primary_colour2_1');" style="background-color:#959BA1;" id="primary_colour2_label_1" for="primary_colour2_1"><span>Grey</span></label>
+																								<input onchange="changeColour('primary2', '#FFFFFF', 'primary_colour2_2');" type="radio" id="primary_colour2_2" name="primary_colour2" value="#FFFFFF" />
+												<label onclick="changeColour('primary2', '#FFFFFF', 'primary_colour2_2');" style="background-color:#FFFFFF;" id="primary_colour2_label_2" for="primary_colour2_2"><span>White</span></label>
+																								<input onchange="changeColour('primary2', '#F8F837', 'primary_colour2_3');" type="radio" id="primary_colour2_3" name="primary_colour2" value="#F8F837" />
+												<label onclick="changeColour('primary2', '#F8F837', 'primary_colour2_3');" style="background-color:#F8F837;" id="primary_colour2_label_3" for="primary_colour2_3"><span>Yellow</span></label>
+																								<input onchange="changeColour('primary2', '#F58220', 'primary_colour2_4');" type="radio" id="primary_colour2_4" name="primary_colour2" value="#F58220" />
+												<label onclick="changeColour('primary2', '#F58220', 'primary_colour2_4');" style="background-color:#F58220;" id="primary_colour2_label_4" for="primary_colour2_4"><span>Orange</span></label>
+																								<input onchange="changeColour('primary2', '#811E2D', 'primary_colour2_5');" type="radio" id="primary_colour2_5" name="primary_colour2" value="#811E2D" />
+												<label onclick="changeColour('primary2', '#811E2D', 'primary_colour2_5');" style="background-color:#811E2D;" id="primary_colour2_label_5" for="primary_colour2_5"><span>Maroon</span></label>
+																								<input onchange="changeColour('primary2', '#F00000', 'primary_colour2_6');" type="radio" id="primary_colour2_6" name="primary_colour2" value="#F00000" />
+												<label onclick="changeColour('primary2', '#F00000', 'primary_colour2_6');" style="background-color:#F00000;" id="primary_colour2_label_6" for="primary_colour2_6"><span>Red</span></label>
+																								<input onchange="changeColour('primary2', '#C8232A', 'primary_colour2_7');" type="radio" id="primary_colour2_7" name="primary_colour2" value="#C8232A" />
+												<label onclick="changeColour('primary2', '#C8232A', 'primary_colour2_7');" style="background-color:#C8232A;" id="primary_colour2_label_7" for="primary_colour2_7"><span>Light Red</span></label>
+																								<input onchange="changeColour('primary2', '#00A650', 'primary_colour2_8');" type="radio" id="primary_colour2_8" name="primary_colour2" value="#00A650" />
+												<label onclick="changeColour('primary2', '#00A650', 'primary_colour2_8');" style="background-color:#00A650;" id="primary_colour2_label_8" for="primary_colour2_8"><span>Green</span></label>
+																								<input onchange="changeColour('primary2', '#0C4CA3', 'primary_colour2_9');" type="radio" id="primary_colour2_9" name="primary_colour2" value="#0C4CA3" />
+												<label onclick="changeColour('primary2', '#0C4CA3', 'primary_colour2_9');" style="background-color:#0C4CA3;" id="primary_colour2_label_9" for="primary_colour2_9"><span>Blue</span></label>
+																								<input onchange="changeColour('primary2', '#1C1B2D', 'primary_colour2_10');" type="radio" id="primary_colour2_10" name="primary_colour2" value="#1C1B2D" />
+												<label onclick="changeColour('primary2', '#1C1B2D', 'primary_colour2_10');" style="background-color:#1C1B2D;" id="primary_colour2_label_10" for="primary_colour2_10"><span>Dark Blue</span></label>
+																								<input onchange="changeColour('primary2', '#8BB4EA', 'primary_colour2_11');" type="radio" id="primary_colour2_11" name="primary_colour2" value="#8BB4EA" />
+												<label onclick="changeColour('primary2', '#8BB4EA', 'primary_colour2_11');" style="background-color:#8BB4EA;" id="primary_colour2_label_11" for="primary_colour2_11"><span>Light Blue</span></label>
+																								<input onchange="changeColour('primary2', '#A99863', 'primary_colour2_12');" type="radio" id="primary_colour2_12" name="primary_colour2" value="#A99863" />
+												<label onclick="changeColour('primary2', '#A99863', 'primary_colour2_12');" style="background-color:#A99863;" id="primary_colour2_label_12" for="primary_colour2_12"><span>Gold</span></label>
+																							<input style="display:none;" type="radio" id="primary_colour2_custom" name="primary_colour2" value="#000000" />
+											<label onclick="customColour('primary2', 'primary_colour2_custom', 'primary_colour2_label_custom');customColourChange();" style="background-color:#000000;display:none;" id="primary_colour2_label_custom" for="primary_colour2_custom"><span>Custom Colour</span></label>
+									</fieldset>
+								</li>
+								<li>
+									<fieldset class="colour-list">
+										<legend>Secondary kit colour:</legend>
+																							<input onchange="changeColour('secondary2', '#000000', 'secondary_colour2_0');" type="radio" id="secondary_colour2_0" name="secondary_colour2" value="#000000" />
+												<label onclick="changeColour('secondary2', '#000000', 'secondary_colour2_0');" style="background-color:#000000;" id="secondary_colour2_label_0" for="secondary_colour2_0"><span>Black</span></label>
+																								<input onchange="changeColour('secondary2', '#959BA1', 'secondary_colour2_1');" type="radio" id="secondary_colour2_1" name="secondary_colour2" value="#959BA1" />
+												<label onclick="changeColour('secondary2', '#959BA1', 'secondary_colour2_1');" style="background-color:#959BA1;" id="secondary_colour2_label_1" for="secondary_colour2_1"><span>Grey</span></label>
+																								<input onchange="changeColour('secondary2', '#FFFFFF', 'secondary_colour2_2');" type="radio" id="secondary_colour2_2" name="secondary_colour2" value="#FFFFFF" />
+												<label onclick="changeColour('secondary2', '#FFFFFF', 'secondary_colour2_2');" style="background-color:#FFFFFF;" id="secondary_colour2_label_2" for="secondary_colour2_2"><span>White</span></label>
+																								<input onchange="changeColour('secondary2', '#F8F837', 'secondary_colour2_3');" type="radio" id="secondary_colour2_3" name="secondary_colour2" value="#F8F837" />
+												<label onclick="changeColour('secondary2', '#F8F837', 'secondary_colour2_3');" style="background-color:#F8F837;" id="secondary_colour2_label_3" for="secondary_colour2_3"><span>Yellow</span></label>
+																								<input onchange="changeColour('secondary2', '#F58220', 'secondary_colour2_4');" type="radio" id="secondary_colour2_4" name="secondary_colour2" value="#F58220" />
+												<label onclick="changeColour('secondary2', '#F58220', 'secondary_colour2_4');" style="background-color:#F58220;" id="secondary_colour2_label_4" for="secondary_colour2_4"><span>Orange</span></label>
+																								<input onchange="changeColour('secondary2', '#811E2D', 'secondary_colour2_5');" type="radio" id="secondary_colour2_5" name="secondary_colour2" value="#811E2D" />
+												<label onclick="changeColour('secondary2', '#811E2D', 'secondary_colour2_5');" style="background-color:#811E2D;" id="secondary_colour2_label_5" for="secondary_colour2_5"><span>Maroon</span></label>
+																								<input onchange="changeColour('secondary2', '#F00000', 'secondary_colour2_6');" type="radio" id="secondary_colour2_6" name="secondary_colour2" value="#F00000" />
+												<label onclick="changeColour('secondary2', '#F00000', 'secondary_colour2_6');" style="background-color:#F00000;" id="secondary_colour2_label_6" for="secondary_colour2_6"><span>Red</span></label>
+																								<input onchange="changeColour('secondary2', '#C8232A', 'secondary_colour2_7');" type="radio" id="secondary_colour2_7" name="secondary_colour2" value="#C8232A" />
+												<label onclick="changeColour('secondary2', '#C8232A', 'secondary_colour2_7');" style="background-color:#C8232A;" id="secondary_colour2_label_7" for="secondary_colour2_7"><span>Light Red</span></label>
+																								<input onchange="changeColour('secondary2', '#00A650', 'secondary_colour2_8');" type="radio" id="secondary_colour2_8" name="secondary_colour2" value="#00A650" />
+												<label onclick="changeColour('secondary2', '#00A650', 'secondary_colour2_8');" style="background-color:#00A650;" id="secondary_colour2_label_8" for="secondary_colour2_8"><span>Green</span></label>
+																								<input onchange="changeColour('secondary2', '#0C4CA3', 'secondary_colour2_9');" type="radio" id="secondary_colour2_9" name="secondary_colour2" value="#0C4CA3" />
+												<label onclick="changeColour('secondary2', '#0C4CA3', 'secondary_colour2_9');" style="background-color:#0C4CA3;" id="secondary_colour2_label_9" for="secondary_colour2_9"><span>Blue</span></label>
+																								<input onchange="changeColour('secondary2', '#1C1B2D', 'secondary_colour2_10');" type="radio" id="secondary_colour2_10" name="secondary_colour2" value="#1C1B2D" />
+												<label onclick="changeColour('secondary2', '#1C1B2D', 'secondary_colour2_10');" style="background-color:#1C1B2D;" id="secondary_colour2_label_10" for="secondary_colour2_10"><span>Dark Blue</span></label>
+																								<input onchange="changeColour('secondary2', '#8BB4EA', 'secondary_colour2_11');" type="radio" id="secondary_colour2_11" name="secondary_colour2" value="#8BB4EA" />
+												<label onclick="changeColour('secondary2', '#8BB4EA', 'secondary_colour2_11');" style="background-color:#8BB4EA;" id="secondary_colour2_label_11" for="secondary_colour2_11"><span>Light Blue</span></label>
+																								<input onchange="changeColour('secondary2', '#A99863', 'secondary_colour2_12');" type="radio" id="secondary_colour2_12" name="secondary_colour2" value="#A99863" />
+												<label onclick="changeColour('secondary2', '#A99863', 'secondary_colour2_12');" style="background-color:#A99863;" id="secondary_colour2_label_12" for="secondary_colour2_12"><span>Gold</span></label>
+																							<input style="display:none;" type="radio" id="secondary_colour2_custom" name="secondary_colour2" value="#000000" />
+											<label onclick="customColour('secondary2', 'secondary_colour2_custom', 'secondary_colour2_label_custom');customColourChange();" style="background-color:#000000;display:none;" id="secondary_colour2_label_custom" for="secondary_colour2_custom"><span>Custom Colour</span></label>
+									</fieldset>
+								</li>
+							</ol>
+						</fieldset>
+					</div>
+				</main>
+													<footer class="contentinfo" role="contentinfo">
+
+					</footer>
+
+			</div>
+							<input type="hidden" name="form_player0_name" id="form_player0_name" value="" />
+				<input type="hidden" name="form_player0_position" id="form_player0_position" value="" />
+				<input type="hidden" name="form_player0_top" id="form_player0_top" value="" />
+				<input type="hidden" name="form_player0_left" id="form_player0_left" value="" />
+				<input type="hidden" name="form_player0_arrow" id="form_player0_arrow" value="" />
+				<input type="hidden" name="form_player0_arrow2" id="form_player0_arrow2" value="" />
+								<input type="hidden" name="form_player1_name" id="form_player1_name" value="" />
+				<input type="hidden" name="form_player1_position" id="form_player1_position" value="" />
+				<input type="hidden" name="form_player1_top" id="form_player1_top" value="" />
+				<input type="hidden" name="form_player1_left" id="form_player1_left" value="" />
+				<input type="hidden" name="form_player1_arrow" id="form_player1_arrow" value="" />
+				<input type="hidden" name="form_player1_arrow2" id="form_player1_arrow2" value="" />
+								<input type="hidden" name="form_player2_name" id="form_player2_name" value="" />
+				<input type="hidden" name="form_player2_position" id="form_player2_position" value="" />
+				<input type="hidden" name="form_player2_top" id="form_player2_top" value="" />
+				<input type="hidden" name="form_player2_left" id="form_player2_left" value="" />
+				<input type="hidden" name="form_player2_arrow" id="form_player2_arrow" value="" />
+				<input type="hidden" name="form_player2_arrow2" id="form_player2_arrow2" value="" />
+								<input type="hidden" name="form_player3_name" id="form_player3_name" value="" />
+				<input type="hidden" name="form_player3_position" id="form_player3_position" value="" />
+				<input type="hidden" name="form_player3_top" id="form_player3_top" value="" />
+				<input type="hidden" name="form_player3_left" id="form_player3_left" value="" />
+				<input type="hidden" name="form_player3_arrow" id="form_player3_arrow" value="" />
+				<input type="hidden" name="form_player3_arrow2" id="form_player3_arrow2" value="" />
+								<input type="hidden" name="form_player4_name" id="form_player4_name" value="" />
+				<input type="hidden" name="form_player4_position" id="form_player4_position" value="" />
+				<input type="hidden" name="form_player4_top" id="form_player4_top" value="" />
+				<input type="hidden" name="form_player4_left" id="form_player4_left" value="" />
+				<input type="hidden" name="form_player4_arrow" id="form_player4_arrow" value="" />
+				<input type="hidden" name="form_player4_arrow2" id="form_player4_arrow2" value="" />
+								<input type="hidden" name="form_player5_name" id="form_player5_name" value="" />
+				<input type="hidden" name="form_player5_position" id="form_player5_position" value="" />
+				<input type="hidden" name="form_player5_top" id="form_player5_top" value="" />
+				<input type="hidden" name="form_player5_left" id="form_player5_left" value="" />
+				<input type="hidden" name="form_player5_arrow" id="form_player5_arrow" value="" />
+				<input type="hidden" name="form_player5_arrow2" id="form_player5_arrow2" value="" />
+								<input type="hidden" name="form_player6_name" id="form_player6_name" value="" />
+				<input type="hidden" name="form_player6_position" id="form_player6_position" value="" />
+				<input type="hidden" name="form_player6_top" id="form_player6_top" value="" />
+				<input type="hidden" name="form_player6_left" id="form_player6_left" value="" />
+				<input type="hidden" name="form_player6_arrow" id="form_player6_arrow" value="" />
+				<input type="hidden" name="form_player6_arrow2" id="form_player6_arrow2" value="" />
+								<input type="hidden" name="form_player7_name" id="form_player7_name" value="" />
+				<input type="hidden" name="form_player7_position" id="form_player7_position" value="" />
+				<input type="hidden" name="form_player7_top" id="form_player7_top" value="" />
+				<input type="hidden" name="form_player7_left" id="form_player7_left" value="" />
+				<input type="hidden" name="form_player7_arrow" id="form_player7_arrow" value="" />
+				<input type="hidden" name="form_player7_arrow2" id="form_player7_arrow2" value="" />
+								<input type="hidden" name="form_player8_name" id="form_player8_name" value="" />
+				<input type="hidden" name="form_player8_position" id="form_player8_position" value="" />
+				<input type="hidden" name="form_player8_top" id="form_player8_top" value="" />
+				<input type="hidden" name="form_player8_left" id="form_player8_left" value="" />
+				<input type="hidden" name="form_player8_arrow" id="form_player8_arrow" value="" />
+				<input type="hidden" name="form_player8_arrow2" id="form_player8_arrow2" value="" />
+								<input type="hidden" name="form_player9_name" id="form_player9_name" value="" />
+				<input type="hidden" name="form_player9_position" id="form_player9_position" value="" />
+				<input type="hidden" name="form_player9_top" id="form_player9_top" value="" />
+				<input type="hidden" name="form_player9_left" id="form_player9_left" value="" />
+				<input type="hidden" name="form_player9_arrow" id="form_player9_arrow" value="" />
+				<input type="hidden" name="form_player9_arrow2" id="form_player9_arrow2" value="" />
+								<input type="hidden" name="form_player10_name" id="form_player10_name" value="" />
+				<input type="hidden" name="form_player10_position" id="form_player10_position" value="" />
+				<input type="hidden" name="form_player10_top" id="form_player10_top" value="" />
+				<input type="hidden" name="form_player10_left" id="form_player10_left" value="" />
+				<input type="hidden" name="form_player10_arrow" id="form_player10_arrow" value="" />
+				<input type="hidden" name="form_player10_arrow2" id="form_player10_arrow2" value="" />
+								<input type="hidden" name="form_player11_name" id="form_player11_name" value="" />
+				<input type="hidden" name="form_player11_position" id="form_player11_position" value="" />
+				<input type="hidden" name="form_player11_top" id="form_player11_top" value="" />
+				<input type="hidden" name="form_player11_left" id="form_player11_left" value="" />
+				<input type="hidden" name="form_player11_arrow" id="form_player11_arrow" value="" />
+				<input type="hidden" name="form_player11_arrow2" id="form_player11_arrow2" value="" />
+								<input type="hidden" name="form_player12_name" id="form_player12_name" value="" />
+				<input type="hidden" name="form_player12_position" id="form_player12_position" value="" />
+				<input type="hidden" name="form_player12_top" id="form_player12_top" value="" />
+				<input type="hidden" name="form_player12_left" id="form_player12_left" value="" />
+				<input type="hidden" name="form_player12_arrow" id="form_player12_arrow" value="" />
+				<input type="hidden" name="form_player12_arrow2" id="form_player12_arrow2" value="" />
+								<input type="hidden" name="form_player13_name" id="form_player13_name" value="" />
+				<input type="hidden" name="form_player13_position" id="form_player13_position" value="" />
+				<input type="hidden" name="form_player13_top" id="form_player13_top" value="" />
+				<input type="hidden" name="form_player13_left" id="form_player13_left" value="" />
+				<input type="hidden" name="form_player13_arrow" id="form_player13_arrow" value="" />
+				<input type="hidden" name="form_player13_arrow2" id="form_player13_arrow2" value="" />
+								<input type="hidden" name="form_player14_name" id="form_player14_name" value="" />
+				<input type="hidden" name="form_player14_position" id="form_player14_position" value="" />
+				<input type="hidden" name="form_player14_top" id="form_player14_top" value="" />
+				<input type="hidden" name="form_player14_left" id="form_player14_left" value="" />
+				<input type="hidden" name="form_player14_arrow" id="form_player14_arrow" value="" />
+				<input type="hidden" name="form_player14_arrow2" id="form_player14_arrow2" value="" />
+								<input type="hidden" name="form_player15_name" id="form_player15_name" value="" />
+				<input type="hidden" name="form_player15_position" id="form_player15_position" value="" />
+				<input type="hidden" name="form_player15_top" id="form_player15_top" value="" />
+				<input type="hidden" name="form_player15_left" id="form_player15_left" value="" />
+				<input type="hidden" name="form_player15_arrow" id="form_player15_arrow" value="" />
+				<input type="hidden" name="form_player15_arrow2" id="form_player15_arrow2" value="" />
+								<input type="hidden" name="form_player16_name" id="form_player16_name" value="" />
+				<input type="hidden" name="form_player16_position" id="form_player16_position" value="" />
+				<input type="hidden" name="form_player16_top" id="form_player16_top" value="" />
+				<input type="hidden" name="form_player16_left" id="form_player16_left" value="" />
+				<input type="hidden" name="form_player16_arrow" id="form_player16_arrow" value="" />
+				<input type="hidden" name="form_player16_arrow2" id="form_player16_arrow2" value="" />
+								<input type="hidden" name="form_player17_name" id="form_player17_name" value="" />
+				<input type="hidden" name="form_player17_position" id="form_player17_position" value="" />
+				<input type="hidden" name="form_player17_top" id="form_player17_top" value="" />
+				<input type="hidden" name="form_player17_left" id="form_player17_left" value="" />
+				<input type="hidden" name="form_player17_arrow" id="form_player17_arrow" value="" />
+				<input type="hidden" name="form_player17_arrow2" id="form_player17_arrow2" value="" />
+								<input type="hidden" name="form_player18_name" id="form_player18_name" value="" />
+				<input type="hidden" name="form_player18_position" id="form_player18_position" value="" />
+				<input type="hidden" name="form_player18_top" id="form_player18_top" value="" />
+				<input type="hidden" name="form_player18_left" id="form_player18_left" value="" />
+				<input type="hidden" name="form_player18_arrow" id="form_player18_arrow" value="" />
+				<input type="hidden" name="form_player18_arrow2" id="form_player18_arrow2" value="" />
+								<input type="hidden" name="form_player19_name" id="form_player19_name" value="" />
+				<input type="hidden" name="form_player19_position" id="form_player19_position" value="" />
+				<input type="hidden" name="form_player19_top" id="form_player19_top" value="" />
+				<input type="hidden" name="form_player19_left" id="form_player19_left" value="" />
+				<input type="hidden" name="form_player19_arrow" id="form_player19_arrow" value="" />
+				<input type="hidden" name="form_player19_arrow2" id="form_player19_arrow2" value="" />
+								<input type="hidden" name="form_player20_name" id="form_player20_name" value="" />
+				<input type="hidden" name="form_player20_position" id="form_player20_position" value="" />
+				<input type="hidden" name="form_player20_top" id="form_player20_top" value="" />
+				<input type="hidden" name="form_player20_left" id="form_player20_left" value="" />
+				<input type="hidden" name="form_player20_arrow" id="form_player20_arrow" value="" />
+				<input type="hidden" name="form_player20_arrow2" id="form_player20_arrow2" value="" />
+								<input type="hidden" name="form_player21_name" id="form_player21_name" value="" />
+				<input type="hidden" name="form_player21_position" id="form_player21_position" value="" />
+				<input type="hidden" name="form_player21_top" id="form_player21_top" value="" />
+				<input type="hidden" name="form_player21_left" id="form_player21_left" value="" />
+				<input type="hidden" name="form_player21_arrow" id="form_player21_arrow" value="" />
+				<input type="hidden" name="form_player21_arrow2" id="form_player21_arrow2" value="" />
+							<input type="hidden" name="form_date" id="form_date" value="" />
+			<input type="hidden" name="form_month" id="form_month" value="" />
+			<input type="hidden" name="form_year" id="form_year" value="" />
+			<input type="hidden" name="form_formation_home" id="form_formation_home" value="" />
+			<input type="hidden" name="form_formation_away" id="form_formation_away" value="" />
+			<input type="hidden" name="load" id="load" value="1511921804" />
+			<input type="hidden" name="original_id" id="original_id" value="0" />
+		</form>
+
+
+	</div>
+	<div id="pitch" onclick="point_it(event);">
+						<a href="#" id="keyboardmessage" onclick="defaultFormation();return false;">Click on the pitch to add players or alternatively click this box to create a standard 4-4-2 formation.</a>
+		<div id="formation_home">&nbsp;</div>
+		<div id="formation_away">&nbsp;</div>
+		<div id="player0" class="player" data-playername="Goalie" style="visibility:hidden;"><div id="player0_kit" class="keyLink"></div><div id="player0_shadow" class="shadow"></div><div id="player0_swos" class="swos"></div></div>
+		<div id="player1" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player1');return false;"><div id="player1_kit" class="keyLink"></div><div id="player1_arrow" class="arrow"></div><div id="player1_arrow2" class="arrow"></div><div id="player1_shadow" class="shadow"></div><div id="player1_swos" class="swos"></div></div>
+		<div id="player2" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player2');return false;"><div id="player2_kit" class="keyLink"></div><div id="player2_arrow" class="arrow"></div><div id="player2_arrow2" class="arrow"></div><div id="player2_shadow" class="shadow"></div><div id="player2_swos" class="swos"></div></div>
+		<div id="player3" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player3');return false;"><div id="player3_kit" class="keyLink"></div><div id="player3_arrow" class="arrow"></div><div id="player3_arrow2" class="arrow"></div><div id="player3_shadow" class="shadow"></div><div id="player3_swos" class="swos"></div></div>
+		<div id="player4" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player4');return false;"><div id="player4_kit" class="keyLink"></div><div id="player4_arrow" class="arrow"></div><div id="player4_arrow2" class="arrow"></div><div id="player4_shadow" class="shadow"></div><div id="player4_swos" class="swos"></div></div>
+		<div id="player5" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player5');return false;"><div id="player5_kit" class="keyLink"></div><div id="player5_arrow" class="arrow"></div><div id="player5_arrow2" class="arrow"></div><div id="player5_shadow" class="shadow"></div><div id="player5_swos" class="swos"></div></div>
+		<div id="player6" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player6');return false;"><div id="player6_kit" class="keyLink"></div><div id="player6_arrow" class="arrow"></div><div id="player6_arrow2" class="arrow"></div><div id="player6_shadow" class="shadow"></div><div id="player6_swos" class="swos"></div></div>
+		<div id="player7" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player7');return false;"><div id="player7_kit" class="keyLink"></div><div id="player7_arrow" class="arrow"></div><div id="player7_arrow2" class="arrow"></div><div id="player7_shadow" class="shadow"></div><div id="player7_swos" class="swos"></div></div>
+		<div id="player8" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player8');return false;"><div id="player8_kit" class="keyLink"></div><div id="player8_arrow" class="arrow"></div><div id="player8_arrow2" class="arrow"></div><div id="player8_shadow" class="shadow"></div><div id="player8_swos" class="swos"></div></div>
+		<div id="player9" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player9');return false;"><div id="player9_kit" class="keyLink"></div><div id="player9_arrow" class="arrow"></div><div id="player9_arrow2" class="arrow"></div><div id="player9_shadow" class="shadow"></div><div id="player9_swos" class="swos"></div></div>
+		<div id="player10" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player10');return false;"><div id="player10_kit" class="keyLink"></div><div id="player10_arrow" class="arrow"></div><div id="player10_arrow2" class="arrow"></div><div id="player10_shadow" class="shadow"></div><div id="player10_swos" class="swos"></div></div>
+
+		<div id="player11" class="player" data-playername="Goalie" style="visibility:hidden;"><div id="player11_kit" class="keyLink opposition"></div><div id="player11_shadow" class="shadow"></div><div id="player11_swos" class="swos"></div></div>
+		<div id="player12" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player12');return false;"><div id="player12_kit" class="keyLink opposition"></div><div id="player12_arrow" class="arrow"></div><div id="player12_arrow2" class="arrow"></div><div id="player12_shadow" class="shadow"></div><div id="player12_swos" class="swos"></div></div>
+		<div id="player13" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player13');return false;"><div id="player13_kit" class="keyLink opposition"></div><div id="player13_arrow" class="arrow"></div><div id="player13_arrow2" class="arrow"></div><div id="player13_shadow" class="shadow"></div><div id="player13_swos" class="swos"></div></div>
+		<div id="player14" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player14');return false;"><div id="player14_kit" class="keyLink opposition"></div><div id="player14_arrow" class="arrow"></div><div id="player14_arrow2" class="arrow"></div><div id="player14_shadow" class="shadow"></div><div id="player14_swos" class="swos"></div></div>
+		<div id="player15" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player15');return false;"><div id="player15_kit" class="keyLink opposition"></div><div id="player15_arrow" class="arrow"></div><div id="player15_arrow2" class="arrow"></div><div id="player15_shadow" class="shadow"></div><div id="player15_swos" class="swos"></div></div>
+		<div id="player16" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player16');return false;"><div id="player16_kit" class="keyLink opposition"></div><div id="player16_arrow" class="arrow"></div><div id="player16_arrow2" class="arrow"></div><div id="player16_shadow" class="shadow"></div><div id="player16_swos" class="swos"></div></div>
+		<div id="player17" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player17');return false;"><div id="player17_kit" class="keyLink opposition"></div><div id="player17_arrow" class="arrow"></div><div id="player17_arrow2" class="arrow"></div><div id="player17_shadow" class="shadow"></div><div id="player17_swos" class="swos"></div></div>
+		<div id="player18" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player18');return false;"><div id="player18_kit" class="keyLink opposition"></div><div id="player18_arrow" class="arrow"></div><div id="player18_arrow2" class="arrow"></div><div id="player18_shadow" class="shadow"></div><div id="player18_swos" class="swos"></div></div>
+		<div id="player19" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player19');return false;"><div id="player19_kit" class="keyLink opposition"></div><div id="player19_arrow" class="arrow"></div><div id="player19_arrow2" class="arrow"></div><div id="player19_shadow" class="shadow"></div><div id="player19_swos" class="swos"></div></div>
+		<div id="player20" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player20');return false;"><div id="player20_kit" class="keyLink opposition"></div><div id="player20_arrow" class="arrow"></div><div id="player20_arrow2" class="arrow"></div><div id="player20_shadow" class="shadow"></div><div id="player20_swos" class="swos"></div></div>
+		<div id="player21" class="player" data-playername="" onmousedown="startDrag(event, this);" ontouchstart="startDrag(event, this);" oncontextmenu="displayPlayerArrows2('player21');return false;"><div id="player21_kit" class="keyLink opposition"></div><div id="player21_arrow" class="arrow"></div><div id="player21_arrow2" class="arrow"></div><div id="player21_shadow" class="shadow"></div><div id="player21_swos" class="swos"></div></div>
+	</div>
+	<div id="sidebar">
+        &nbsp;
+			</div>
+</div>
+</body>
+</html>
+
+{% endblock %}

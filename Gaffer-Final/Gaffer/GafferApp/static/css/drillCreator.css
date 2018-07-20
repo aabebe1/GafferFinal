@@ -1,0 +1,72 @@
+#sidePanel {
+	background-color:rgb(43,70,120);
+	border: 3px solid;
+	border-right: 0;
+}
+
+#drillContainer {
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+}
+
+.toolContainer {
+	margin: 6px 6px 0px 6px;
+	width: 50px;
+	height: 40px;
+	background-color: #53ea78;
+	border: 1px solid black;
+	border-radius: 8px;
+}
+
+#drillBox {
+	float: left;
+	width: 601px;
+	height: 400px;
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	background-origin: content-box;
+	border:3px solid;
+	position: relative;
+}
+
+hr {
+	border: 0;
+	width: 100%;
+	border-bottom: 2px solid black;
+	margin-top: 9px;
+	margin-bottom: 3px;
+}
+
+#drillCanvas {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+}
+
+#tempCanvas {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+}
+#saveButton:active {
+	background-color: #13a058;
+}
+#saveButton:hover {
+	background-color: #13a058;
+}
+
+#clearButton:active {
+	background-color: #13a058;
+}
+#clearButton:hover {
+	background-color: #13a058;
+}
+
+#arrowContainer:hover {
+	background-color: #13a058;
+}
+
+#id_drillTitle, #id_drillDescription, #id_drillType, #id_drillSetup, #id_drillInstruction, #id_drillDate {
+	background-color: #33aa7e;
+	color: white;
+}

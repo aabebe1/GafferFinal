@@ -1,0 +1,43 @@
+{% extends "GafferApp/maindrill.html" %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cagliostro" />
+<link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+{% block drillBody%}
+<div class = "jumbotron jumbotron-fluid listgrouptop myJumbotron">
+  <p>
+  Click of the title of the drill to see details:
+  </p>
+  <div id="drillList" class="list-group">
+      {% for drill in drills_list %}
+              <li class="list-group-item list-group-item-light">
+		   <div class="container-fluid  inlist">
+			<div class="row" style="height:200px;">
+				<div class="d-flex flex-col align-items-center">
+					<center><h2><span class="badge badge-primary badge-pill rating">{{drill.drillRate}}</span></h2></center>
+				</div>
+				<div class="d-flex flex-col">
+					<img src="{{ drill.drillImage }}" class="figure-img img-fluid rounded" width="300px">
+				</div>
+				<div class="col" style="max-height:190px; overflow: hidden;">
+			<a class = "intext" href="{% url 'GafferApp:detail' pk=drill.id %}"><strong><u>{{drill.drillTitle}}</u></strong></a>
+			 <span class="badge badge-primary badge-pill owner">Drill Created by : {{drill.drillOwner}}</span>
+			 <p id="description">{{ drill.drillDescription }}</p>
+			 </div>
+			 </div>
+		   </div>
+		  </li>
+
+      {% empty %}
+          <p>
+              No drills to view.
+
+          </p>
+      {% endfor %}
+  </ul>
+
+    {% include 'GafferApp/pagination.html' %}
+
+
+</div>
+{% endblock %}

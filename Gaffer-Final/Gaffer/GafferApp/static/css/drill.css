@@ -1,0 +1,218 @@
+/*.loginForm {
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    text-align: left;
+    color: #000;
+    background-color: #FFF;
+    margin: 100px auto 0;
+    padding: 20px 20px 20px;
+    position: relative;
+    width: 330px;
+}*/
+#drillTypeButtons {
+	padding-top: 30px;
+}
+
+.drill_form {
+    background: #d4d6d8;
+    border: 5px solid #3e593b;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 770px;
+    min-width: 400px;
+    margin: 50px auto;
+    padding:30px;
+    text-align: left;
+    font-style: normal;
+    font-weight: bold;
+
+}
+
+.drill_list{
+    background:  #e6ffff;
+    border: 5px solid #3e593b;
+    border-radius: 5px;
+    overflow:auto;
+    width: 75em;
+    min-width: 300px;
+    margin: 50px auto;
+
+}
+
+.maindrill{
+  background: #c0d8d8;
+  height: 200px;
+  padding: 300px;
+  border: 6px solid ;
+  padding-left: 180px;
+}
+
+.linkbut{
+padding: 10px;
+border: 2px solid #c0d8d8;
+width: 150px;
+position:relative;
+background-color: rgba(23,50,100,.85);
+}
+
+.linkbut:hover {
+	background-color: #33aa7e;
+	border-color: white;
+}
+
+.linkbut:active, .linkbut:focus {
+	background-color: white !important;
+	border-color: white !important;
+}
+
+.details{
+  /* text-align: left; */
+  /* font-family: Cagliostro; */
+  /* font-size: 14px; */
+  /* font-style: normal; */
+  /* font-variant: normal; */
+  font-weight: 500;
+  /* line-height: 18px; */
+}
+
+.drillIntro{
+  font-family: Cagliostro;
+  font-size: 14px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.form-check{
+  display:inline-block;
+}
+.commentbut{
+  font-size: 1rem;
+  padding: 10px;
+  margin: 5px;
+  min-width: 150px;
+  position:relative;
+  background-color: #33aa7e;
+
+}
+
+.commentbut:disabled {
+	background-color: #33aa7e;
+}
+
+.list-group-item {
+	background-color: rgba(0,0,0,0);
+	border-color: white;
+}
+
+.inlist{
+  text-align: left;
+  font-weight: lighter;
+  border-color: white;
+  color: white;
+}
+
+.intext{
+  color: white;
+}
+
+.intext:hover {
+	color: #aad0bb;
+}
+
+.myJumbotron {
+  color:white;
+  background-color: rgba(23,50,100,.75);
+  text-align: left;
+  padding: 10px;
+  font-weight: bold;
+  font-style: normal;
+  font-size: 16px;
+  margin-right: 5px;
+}
+.myJumbotron2 {
+  color:white;
+  background-color: rgba(23,50,100,.75);
+  text-align: left;
+  padding: 10px;
+  font-weight: bold;
+  font-style: normal;
+  font-size: 16px;
+  margin: auto;
+}
+/* .listgrouptop{ */
+  /* color:white; */
+  /* background-color: rgba(23,50,100,.7); */
+  /* text-align: left; */
+  /* padding: 10px; */
+  /* font-weight: bold; */
+  /* font-style: normal; */
+  /* font-size: 16px; */
+  /* margin-right: 5px; */
+/* } */
+
+#description {
+	overflow: hidden;
+}
+
+.rating {
+	margin-right: 10px;
+	background-color: #33aa7e;
+	padding: 10px 20px 10px 20px;
+}
+
+.owner {
+	background-color: #33aa7e;	
+}
+
+#drillImg {
+	width: 300px;
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+	#drillImg {
+			width: 500px;
+	}
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+	.drill_form {
+		width: 65em;
+	}
+}
+
+.slide {
+  width:500px;
+}
+
+.plan {
+	max-width:25rem; 
+	background-color:rgba(23,50,100,.75);
+}
+
+.title {
+	color: #33aa7e;
+}
+
+.planField {
+	border: 0;
+	width: 100%;
+	background-color: #33aa7e;
+}
+
+.pagination{
+ 	background-color: rgba(23,50,100,.75);
+ 	color: #FFFFFF;
+ 	width: 200px;
+ 	text-align: center;
+ 
+ }
+ 
+#id_author, #id_text, #id_rating, #id_coachingPlanTitle, #id_coachingPlanType, #id_coachingPlanDescription, #id_coachingPlanNotes, #id_coachingPlanDate, 
+#id_name, #id_team, #id_website, #id_twitterHandle, #id_bio, #id_profilePic{
+	background-color: #33aa7e;
+	color: white;
+}

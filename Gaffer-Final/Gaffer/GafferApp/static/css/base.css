@@ -1,0 +1,103 @@
+#accordion {
+	padding-top: 50px;
+	background-color: rgba(23,50,100,.75);
+	height: 100vh;
+	min-height: 420px;
+	position: fixed;
+	z-index: 10;
+}
+
+#smallAccordion {
+	position: fixed;
+	background-color: rgba(23,50,100,.7);
+	z-index: 10;
+}
+
+body {
+  margin-top: 0px;
+  padding: 0px;
+	background-image:url("../images/grass.png");
+	background-attachment: fixed;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
+#mainpage {
+  padding-top: 50px;
+	padding-left: 5px;
+	height: 100%;
+}
+.navbar-custom{
+	position: absolute;
+	width: 100%;
+	background-color: rgba(23,50,100, 1);
+	position: fixed;
+}
+
+.navbar-custom .navbar-brand {
+	color: #33aa7e;
+  font-size: 28px;
+	padding-top:0px;
+	padding-bottom:0px;
+	whitespace: nowrap;
+}
+.navbar-custom .navbar-toggler {
+	margin-right: 10px;
+}
+
+#navcollapse {
+	position: absolute;
+	width: 100%;
+	padding-top: 55px;
+	padding-bottom: 5px;
+}
+
+/* Extra small devices (portrait phones, less than 576px)
+	No media query since this is the default in Bootstrap*/
+#accordion, .menu_item {
+		font-size: .7rem;
+
+	}
+	.icon {
+		width: 26px;
+		height: 26px;
+	}
+	#GSAlogo {
+		width: 42px;
+		height: 55px;
+	}
+	#GafferLogo{
+	  width: 60px;
+	  height: auto;
+	  padding-right: 5px;
+	}
+	#navSearch {
+		width: 250px;
+	}
+
+
+/* Large devices (992px and up) */
+@media (min-width: 992px) {
+	#accordion, .menu_item {
+		font-size: 1rem;
+
+	}
+	.icon {
+		width: 40px;
+		height: 40px;
+	}
+	#GSAlogo {
+		width: 57px;
+		height: 75px;
+
+	}
+
+	#mainpage {
+		padding-left: 215px;
+	}
+}
+
+.loginField {
+	padding-left: 10px;
+}

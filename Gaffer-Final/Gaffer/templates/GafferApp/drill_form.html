@@ -1,0 +1,75 @@
+{% extends "GafferApp/index.html" %}
+{% load staticfiles %}
+{% load widget_tweaks %}
+<!DOCTYPE html>
+    {% block mainBody%}
+    <link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+	<link rel="stylesheet" href="{% static "css/drillCreator.css" %}"/>
+    <div class="container-fluid drill_form myJumbotron2 mt-3">
+
+
+        <form id="drillForm" method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          {% for hidden_field in form.hidden_fields %}
+            {{ hidden_field }}
+          {% endfor %}
+
+		<div class="container" id="drillContainer">
+		<center>
+		<div class="d-inline-flex flex-row drillSpace">
+			<!-- TOOLBAR -->
+			<div id="sidePanel" class="d-flex flex-column align-items-center">
+				<div class="toolContainer">
+					<img src="{% static "images/player.png" %}" height="30" width="30" class="tool new-item">
+				</div>
+				<div class="toolContainer">
+					<img src="{% static "images/goalTool.png" %}" height="40" width="40" class="tool new-item">
+				</div>
+				<div class="toolContainer">
+					<img src="{% static "images/ballTool.png" %}" height="20" width="20" class="tool new-item">
+				</div>
+				<div class="toolContainer">
+					<img src="{% static "images/coneTool.png" %}" height="30" width="30" class="tool new-item">
+				</div>
+				<div class="toolContainer">
+					<p class="tool new-item label" style="color:black;">Label</p>
+				</div>
+				<hr>
+				<div id="arrowContainer" class="toolContainer">
+					<img id="arrowImg" src="{% static "images/arrowTool.png" %}">
+				</div>
+				<button id="clearButton" class="toolContainer" type="button">clear</button>
+				<button id="saveButton" class="toolContainer" type="button">Save</button>
+			</div>
+			<div id="drillBox" class="d-flex" style="background-image:url({% static "images/lineupField.jpg" %});">
+				<canvas id="drillCanvas" width="601" height="400">Canvas is not supported</canvas>
+				<canvas id="tempCanvas" width="601" height="400"></canvas>	
+			</div>
+
+		</div>
+		</center>
+		</div>
+		  
+          {% for field in form.visible_fields %}
+            <div class="form-group">
+              {{ field.label_tag }}
+              {% render_field field class="form-control" %}
+              {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+              {% endif %}
+            </div>
+          {% endfor %}
+		  <span>
+          <button type="submit" id="submitButton" class="btn btn-outline-light commentbut" disabled>Submit</button>
+		  <text id="message"><em>*Please save your image first</em></text>
+		  </span>
+        </form>
+    </div>
+
+  {% endblock %}
+  
+  {% block script %}
+	<script src="{% static "js/drillCreator.js" %}"></script>
+	<script src="{% static "js/html2canvas.min.js" %}"></script>
+  {% endblock %}

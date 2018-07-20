@@ -1,0 +1,24 @@
+{% extends "GafferApp/index.html" %}
+{% load staticfiles %}
+<!DOCTYPE html>
+{% block mainBody %}
+<link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+<div class="jumbotron2">
+
+  <div class= "card-group">
+		{% for plan in coachingPlans_list %}
+		<div class="card m-1 mt-3 text-light plan">
+			<div class="card-body">
+				<h4 class="card-title">{{ plan.coachingPlanTitle }}</h4>
+				<p class="card-text">{{ plan.coachingPlanDate }}</p>
+				<p class="card-text">{{ plan.coachingPlanType }}</p>
+				<a href="{{ plan.id }}/" class="btn btn-outline-light commentbut">View</a>
+			</div>
+		</div>
+		{% endfor %}
+
+	</div>
+	{% include 'GafferApp/pagination.html' %}
+  
+{% endblock %}
+</div>

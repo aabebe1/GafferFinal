@@ -1,0 +1,96 @@
+{% extends "GafferApp/index.html" %}
+{% load staticfiles %}
+<!DOCTYPE html>
+{% block mainBody %}
+<link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+  <div class="jumbotron myJumbotron mt-3" style="max-width: 1220px;">
+    <h2 class="title">{{ plan_details.coachingPlanTitle }}</h2>
+	<p class="title">{{ plan_details.coachingPlanDate }}</p>
+	
+	<form id="editPlan" method="POST">
+	{% csrf_token %}
+
+	{{ form }}
+	
+	<div class="row details">
+		<div class="col-12 col-md-6">
+			<h5>Type:</h5> 
+			<textarea disabled id="typeField" rows="1" class="planField text-light" style="width:100%;">{{plan_details.coachingPlanType}}</textarea>
+			<h5>Description:</h5> 
+			<textarea disabled id="descriptionField" rows="7" class="planField text-light">{{plan_details.coachingPlanDescription}}</textarea>
+		</div>
+		<div class="col-12 col-md-6">
+			<h5>Notes:</h5> 
+			<textarea disabled id="notesField" rows="10" class="planField text-light">{{plan_details.coachingPlanNotes}}</textarea>
+		</div>
+		
+	</div>
+	
+	</form>
+
+		Drills: 
+		<div class="row justify-content-center">
+		{% for drill in plan_details.coachingPlanDrill.all %}
+		<div class="col-md-4 col-sm-6">
+		<div class="card border-0" style="background-color: rgba(0,0,0,0);">
+			
+			<img src="{{ drill.drillImage }}" class="figure-img img-fluid rounded">
+			<h5 class="card-title text-center">
+				<a class="text-light" href="{% url 'GafferApp:detail' pk=drill.id %}"><u>{{ drill.drillTitle }}</u></a>
+			</h5>
+			
+		</div>
+		</div>
+		{% endfor %}
+		</div>
+		<center>
+        {% if user.is_authenticated and plan_details.coachingPlanOwner.id == user.id %}
+        <a class="btn btn-outline-light btn-lg commentbut" href="{% url 'GafferApp:drill_list'  %}">Add New Drill<span class="glyphicon glyphicon-remove"></span></a>
+		<button id="editButton" class="btn btn-outline-light btn-lg commentbut" href="{% url 'GafferApp:drill_list'  %}">Edit Plan</button>
+		<button disabled id="saveButton" class="btn btn-outline-light btn-lg commentbut" href="{% url 'GafferApp:drill_list'  %}">Save Changes</button>
+		{% endif %}
+		</center>
+    </div>
+
+
+{% endblock %}
+
+{% block script %}
+<script>
+	$(document).ready(function() {
+	var editing = false;
+	
+	$("#editButton").click(function (event) {
+		editing = true;
+		$(".planField").attr("disabled", false);
+		$("#editButton").attr("disabled", true);
+		$("#saveButton").attr("disabled", false);
+		$("#typeField").focus();
+		window.scrollTo(0, 0);
+	});
+	
+	$("#saveButton").click(function (event) {
+		editing = false;
+		$(".planField").attr("disabled", true);
+		$("#editButton").attr("disabled", false);
+		$("#saveButton").attr("disabled", true);
+		
+		// save values to form
+		$("#id_planId").val({{ plan_details.id }});
+		$("#id_planType").val($("#typeField").val());
+		$("#id_planDescription").val($("#descriptionField").val());
+		$("#id_planNotes").val($("#notesField").val());
+	
+		$("#editPlan").submit();
+	});
+	
+	window.onbeforeunload = function() {
+		if (editing) {
+			return "Do you want to leave before saving your changes?";
+		}
+	}
+	
+});
+	
+	</script>
+{% endblock %}

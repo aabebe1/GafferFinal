@@ -1,0 +1,17 @@
+{% extends "GafferApp/maindrill.html" %}
+{% load staticfiles %}
+{% load bootstrap3 %}
+{% block drillBody %}
+  <link rel="stylesheet" type="text/css" href="{% static "css/login.css" %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+
+<div class="jumbotron jumbotron-fluid signupForm myJumbotron2">
+  <h1>New comment</h1>
+  <form method="POST" class="container-fluid form-group">
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  <button type="submit" class="save btn btn-outline-light commentbut">Post Comment</button>
+</form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,57 @@
+/*.loginForm {
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    text-align: left;
+    color: #000;
+    background-color: #FFF;
+    margin: 100px auto 0;
+    padding: 20px 20px 20px;
+    position: relative;
+    width: 330px;
+}*/
+
+
+.loginForm {
+    background: #edf1f7;
+    border: 5px solid #eaeaea;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 35em;
+    min-width: 300px;
+    margin: 100px auto;
+    height: 40em;
+    text-align: left;
+    padding: 50px;
+
+
+}
+h1{
+  text-align: center;
+}
+
+.signupForm {
+    background: #edf1f7;
+    border: 5px solid #eaeaea;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 40em;
+    min-width: 300px;
+    margin: 100px auto;
+    height: 50em;
+    text-align: left;
+    padding: 60px;
+}
+
+.bioForm {
+    background: #edf1f7;
+    border: 5px solid #eaeaea;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 50em;
+    min-width: 300px;
+    margin: 100px auto;
+    height: 60em;
+    text-align: left;
+    padding: 60px;
+
+}

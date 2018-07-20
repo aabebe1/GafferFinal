@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+		<title>Gaffer</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+		<link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"/>
+		<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/godswearhats/jquery-ui-rotatable@1.1/jquery.ui.rotatable.css">
+		<link rel="stylesheet" type="text/css" href="{% static "css/base.css" %}"/>
+		<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+		<style>
+			{% block style %}
+			{% endblock %}
+		</style>
+	</head>
+
+	<body>
+
+  	<!-- DOCUMENTATION NAVBAR -->
+	<div>
+		<div class="collapse" id="navcollapse">
+			<div class="d-block d-lg-none">
+				<div class="d-flex flex-column float-left" id="smallAccordion">
+					<div class="card border-0" style="background-color:rgba(0,0,0,0);">
+						<div class="card-header border-light pl-1" id="smallPlansHeading" role="tab">
+							<img class="icon" src="{% static "images/planIcon.png" %}">
+							<a class="text-light" data-toggle="collapse" href="#smallPlansCollapse">
+								COACHING PLANS
+							</a>
+
+						</div>
+						<div id="smallPlansCollapse" class="collapse" role="tabpanel" data-parent="#smallAccordion">
+							<div class="card" style="background-color: #33aa7e">
+								<!-- TODO PUT CORRECT LINKS HERE -->
+								<a class="btn btn-outline-light text-left menu_item"  href="{% url 'GafferApp:maindrill' %}">View Drills</a>
+								<a class="btn btn-outline btn-outline-light text-left menu_item" href="{% url 'GafferApp:drillform' %}">Create drills</a>
+								<a class="btn btn-outline btn-outline-light text-left menu_item" href= "{% url 'GafferApp:view_coaching_plan' %}">View Coaching Plans</a>
+								<a class="btn btn-outline btn-outline-light text-left menu_item" href= "{% url 'GafferApp:create_coaching_plan' %}">Create Coaching Plans</a>
+							</div>
+						</div>
+
+						<div class="card-header border-light pl-1" id="smallToolsHeading" role="tab">
+								<img class="icon" src="{% static "images/toolsIcon.png" %}">
+								<a class="text-light" data-toggle="collapse" href="#smallToolsCollapse">
+									COACHING TOOLS
+								</a>
+						</div>
+						<div id="smallToolsCollapse" class="collapse" role="tabpanel" data-parent="#smallAccordion">
+							<div class="card" style="background-color: #33aa7e">
+								<!-- TODO PUT CORRECT LINKS HERE -->
+								<a class="btn btn-outline-light text-left menu_item" href= "{% url 'GafferApp:create_lineup' %}">Create Lineup</a>
+								<!-- <a class="btn btn-outline btn-outline-light text-left menu_item" href= "{% url 'GafferApp:view_lineup' %}">View Lineup</a> -->
+							</div>
+						</div>
+
+						<div class="card-header border-light pl-1" id="smallForumHeading" role="tab">
+								<img class="icon" src="{% static "images/forumIcon.png" %}">
+								<a class="text-light" data-toggle="collapse" href="#smallForumCollapse">
+									FORUM
+								</a>
+						</div>
+						<div id="smallForumCollapse" class="collapse" role="tabpanel" data-parent="#smallAccordion">
+							<div class="card" style="background-color: #33aa7e">
+								<!-- TODO PUT CORRECT LINKS HERE -->
+								<a class="btn btn-outline-light text-left menu_item" href= "{% url 'GafferApp:forum' %}">View forum</a>
+							</div>
+						</div>
+						<div class="card-header border-light pl-1" id="smallProfileHeading" role="tab">
+								<img class="icon" src="{% static "images/profileIcon.png" %}">
+								<a class="text-light" data-toggle="collapse" href="#smallProfileCollapse">
+									PROFILE
+								</a>
+						</div>
+						<div id="smallProfileCollapse" class="collapse" role="tabpanel" data-parent="#smallAccordion">
+							<div class="card" style="background-color: #33aa7e">
+								<!-- TODO PUT CORRECT LINKS HERE -->
+								<a class="btn btn-outline-light text-left menu_item" href=  "{% url 'GafferApp:bio_list' %}">View Coaches Profile</a>
+								{% if user.is_authenticated %}
+								<a class="btn btn-outline-light text-left menu_item" href= "{% url 'GafferApp:individual_bio_list' pk=user.id  %}">View Your Bio</a>
+								{% endif %}
+								<a class="btn btn-outline btn-outline-light text-left menu_item"  href= "{% url 'GafferApp:bioform' %}">Create Your Bio</a>
+							</div>
+						</div>
+					</div>
+					<a href="https://grassrootssoccermd.com/">
+						<center>
+							<figure class="figure">
+								<figcaption class="figure-caption text-center text-light">Sponsored by</figcaption>
+								<center>
+									<img id="GSAlogo" src="{% static "images/GSAlogo.png" %}" class="figure-img img-fluid rounded">
+								</center>
+								<figcaption class="figure-caption text-center text-light">Grassroots Soccer Academy</figcaption>
+							</figure>
+						</center>
+					</a>
+
+				</div>
+			</div>
+		</div>
+
+		<nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-custom">
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navcollapse" aria-controls="accordion" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<img id="GafferLogo" src="{% static "images/gafferLogo.svg" %}" alt="">
+			<a class="navbar-brand" href="{% url 'GafferApp:homePage' %}">Gaffer</a>
+			<!-- Stuff on the Right -->
+			<!-- SEARCH BAR -->
+
+			<form class="form-inline ml-auto my-0" method="GET" action="{% url 'GafferApp:search' %}"">
+				<input class="form-control mr-sm-2" id="navSearch" name="q" type="search" placeholder="Search Drills" aria-label="Search">
+			</form>
+				{% if user.is_authenticated %}
+			    <a class= "text-light" href= "{% url 'GafferApp:auth_logout' %}" >Logout</a>
+				{% else %}
+			    <a class= "loginField text-light" href= "{% url 'GafferApp:login' %}" >Login</a>
+				{% endif %}
+		</nav>
+	</div>
+
+
+	<!-- OTHER STUFF ON THE PAGE -->
+
+
+	<div class="d-none d-lg-block">
+	<div class="d-flex flex-column float-left" id="accordion">
+		<div class="card border-0 h-100" style="background-color: rgba(0,0,0,0);">
+			<div class="card-header border-light pl-1" id="plansHeading" role="tab">
+				<img class="icon" src="{% static "images/planIcon.png" %}">
+				<a class="text-light" data-toggle="collapse" href="#plansCollapse">
+					COACHING PLANS
+				</a>
+
+			</div>
+			<div id="plansCollapse" class="collapse" role="tabpanel" data-parent="#accordion">
+				<div class="card" style="background-color: #33aa7e">
+					<!-- TODO PUT CORRECT LINKS HERE -->
+					<a class="btn btn-outline-light text-left menu_item" href="{% url 'GafferApp:maindrill' %}">View Drills</a>
+					<a class="btn btn-outline btn-outline-light text-left menu_item" href="{% url 'GafferApp:drillform' %}">Create Drills</a>
+					<a class="btn btn-outline btn-outline-light text-left menu_item" href= "{% url 'GafferApp:view_coaching_plan' %}">View Coaching Plans</a>
+					<a class="btn btn-outline btn-outline-light text-left menu_item" href= "{% url 'GafferApp:create_coaching_plan' %}">Create Coaching Plans</a>
+				</div>
+			</div>
+
+			<div class="card-header border-light pl-1" id="toolsHeading" role="tab">
+					<img class="icon" src="{% static "images/toolsIcon.png" %}">
+					<a class="text-light" data-toggle="collapse" href="#toolsCollapse">
+						COACHING TOOLS
+					</a>
+			</div>
+			<div id="toolsCollapse" class="collapse" role="tabpanel" data-parent="#accordion">
+				<div class="card" style="background-color: #33aa7e">
+					<!-- TODO PUT CORRECT LINKS HERE -->
+					<a class="btn btn-outline-light text-left menu_item" href= "{% url 'GafferApp:create_lineup' %}">Create Lineup</a>
+					<!-- <a class="btn btn-outline btn-outline-light text-left menu_item" href= "{% url 'GafferApp:view_lineup' %}">View Lineup</a> -->
+				</div>
+			</div>
+
+			<div class="card-header border-light pl-1" role="tab">
+					<img class="icon" src="{% static "images/forumIcon.png" %}">
+					<a class="text-light" data-toggle="collapse" href="#forumCollapse">
+						FORUM
+					</a>
+			</div>
+			<div id="forumCollapse" class="collapse" role="tabpanel" data-parent="#accordion">
+				<div class="card" style="background-color: #33aa7e">
+					<!-- TODO PUT CORRECT LINKS HERE -->
+					<a class="btn btn-outline-light text-left menu_item" href= "{% url 'GafferApp:forum' %}">View forum</a>
+				</div>
+			</div>
+			<div class="card-header border-light pl-1" role="tab">
+					<img class="icon" src="{% static "images/profileIcon.png" %}">
+					<a class="text-light" data-toggle="collapse" href="#profileCollapse">
+						PROFILE
+					</a>
+			</div>
+			<div id="profileCollapse" class="collapse" role="tabpanel" data-parent="#accordion">
+				<div class="card" style="background-color: #33aa7e">
+					<!-- TODO PUT CORRECT LINKS HERE -->
+					<a class="btn btn-outline btn-outline-light text-left menu_item" href=  "{% url 'GafferApp:bio_list' %}">View Other Bio</a>
+					{% if user.is_authenticated %}
+					<a class="btn btn-outline-light text-left menu_item" href= "{% url 'GafferApp:individual_bio_list' pk=user.id  %}">View Your Bio</a>
+					{% endif %}
+					<a class="btn btn-outline-light text-left menu_item" href= "{% url 'GafferApp:bioform' %}">Create Your Bio</a>
+				</div>
+			</div>
+		</div>
+	<a href="https://grassrootssoccermd.com/">
+		<center>
+		<figure class="figure">
+			<figcaption class="figure-caption text-center text-light">Sponsored by</figcaption>
+			<center>
+				<img id="GSAlogo" src="{% static "images/GSAlogo.png" %}" class="figure-img img-fluid rounded">
+			</center>
+			<figcaption class="figure-caption text-center text-light">Grassroots Soccer Academy</figcaption>
+		</figure>
+		</center>
+		</a>
+
+	</div>
+	</div>
+
+
+	<div id = "mainpage">
+		<center>
+			{% block mainBody %}
+			{% endblock %}
+		</center>
+	</div>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/gh/godswearhats/jquery-ui-rotatable@1.1/jquery.ui.rotatable.min.js"></script>
+	<script src="{% static "js/jquery.ui.touch-punch.min.js" %}"></script>
+	<!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+	{% block script %}
+	{% endblock %}
+
+</body>
+
+</html>

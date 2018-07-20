@@ -1,0 +1,34 @@
+{% extends "GafferApp/maindrill.html" %}
+{% load staticfiles %}
+<!DOCTYPE html>
+{% block mainBody%}
+<link rel="stylesheet" type="text/css" href="{% static "css/drill.css" %}"/>
+
+<div class = "jumbotron jumbotron-fluid listgrouptop myJumbotron2 mt-3">
+  <p>
+  Click a coach profile you wish to view:
+  </p>
+  <ul class= "list-group">
+      {% for bio in bios_list %}
+              <li class="list-group-item list-group-item-light">
+                <div class="container-fluid  inlist">
+					<div class="row">
+						<div class="d-flex flex-column">
+							<img src="{{ bio.profilePic.url }}" class="rounded-circle" width="100px">
+						</div>
+						<div class="col">
+			                <h5><a class = "intext" href="{{bio.id}}/">{{bio.name}} </a></h5>
+						</div>
+					</div>
+               </div>
+
+              </li>
+
+      {% empty %}
+          <p>
+              No coach profile to view.
+      {% endfor %}
+  </ul>
+    {% include 'GafferApp/pagination.html' %}
+</div>
+{% endblock %}

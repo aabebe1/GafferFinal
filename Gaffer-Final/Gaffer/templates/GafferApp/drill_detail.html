@@ -1,0 +1,83 @@
+
+{% extends "GafferApp/maindrill.html" %}
+{% block drillBody %}
+  <div class="jumbotron myJumbotron" style="max-width: 1220px;">
+	<div class="row">
+    <div class="col details">
+		<h4><u>{{drill_details.drillTitle}}</u></h4>
+		<p>{{drill_details.drillDescription}}</p>
+		<h4><u>Setup</u></h4>
+		<p>{{drill_details.drillSetup}}</p>
+		<h4><u>Instruction</u></h4>
+		<p>{{drill_details.drillInstruction}}</p>	
+    </div>
+	<div class="col">
+	    <img id="drillImg" src="{{ drill_details.drillImage }}"></img>
+		<p class="mb-0 details">Created by: {{drill_details.drillOwner}}, {{drill_details.drillDate}}</p>
+		<p class="details">Drill Type: {{drill_details.drillType}}</p>
+		{% if user.is_authenticated and user.id == drill_details.drillOwner.id %}
+			<a class="btn btn-outline-light btn-lg commentbut" href="{% url 'GafferApp:drill_edit' pk=drill_details.pk %}">Update Drill<span class="glyphicon glyphicon-pencil"></span></a>
+			<a class="btn btn-outline-light btn-lg commentbut" href="{% url 'GafferApp:drill_remove' pk=drill_details.pk %}">Delete Drill<span class="glyphicon glyphicon-remove"></span></a>
+		{% endif %}
+		<!-- ADD DRILL TO YOUR COACHING PLAN --> 
+		<form id="addPlan" method="POST">
+			{% csrf_token %}
+
+			{{ form }}
+			<div id="usersPlans" class="dropdown">
+				<button class="btn btn-outline-light dropdown-toggle commentbut" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					Add to Coaching Plan
+				</button>
+				<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+					{% for plan in userPlans %}
+						<button class="dropdown-item planOption" type="button" value="{{ plan.id }}">{{ plan.coachingPlanTitle }}</button>
+						{% empty %}
+							<li class="dropdown-item">No Coaching Plans</li>
+					{% endfor %}
+				</div>
+			</div>
+			<!-- <input id="addPlanButton" type="button" class="btn btn-secondary" value="Add to plan"> -->
+		</form>
+	</div>
+	</div> <!-- END ROW -->
+
+<div class="container">
+
+{% for comment in drill_details.comments.all %}
+<br>
+    {% if user.is_authenticated or comment.approved_comment %}
+
+            {{ comment.created_date }}
+            {% if not comment.approved_comment %}
+                <a class="btn btn-default" href="{% url 'GafferApp:comment_remove' pk=comment.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                <a class="btn btn-default" href="{% url 'GafferApp:comment_approve' pk=comment.pk %}"><span class="glyphicon glyphicon-ok"></span></a>
+            {% endif %}
+
+        <p>{{ comment.text|safe|linebreaks }}</p>
+        <p>Posted by: <strong>{{ comment.author }}</strong></p>
+
+    {% endif %}
+	
+{% empty %}
+    <p>No comments posted.</p>
+{% endfor %}
+</div>
+
+  <form class = "form-group" action="{% url 'GafferApp:rating' pk=drill_details.id %}" method="GET">
+    <input type="submit" class='btn btn-outline-light btn-lg commentbut' name='attack' value="Comment and Rate Drill">
+  </form>
+  
+
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+	$(".planOption").click(function(event) {
+		$("#id_drillId").val({{ drill_details.id }});
+		$("#id_planId").val($(this).val());
+		$("#addPlan").submit();
+	});
+</script>
+{% endblock %}
